@@ -3,125 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sistema Institucional Pro</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>Inventario Institucional Premium</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    :root { --azul-tec: #002F6C; --verde-milenio: #82BC00; --bg: #f8fafc; --surface: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    :root { --azul-tec: #002F6C; --verde-milenio: #82BC00; --bg: #f8fafc; --surface: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border: #f1f5f9; --shadow-sm: 0 2px 8px -1px rgba(0,0,0,0.04); }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background-color: var(--bg); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; }
-    .app-container { background: var(--surface); width: 100%; max-width: 460px; min-height: 100vh; display: flex; flex-direction: column; shadow: 0 0 40px rgba(0,0,0,0.05); }
-    .header { background: var(--azul-tec); color: white; padding: 20px; font-weight: 700; font-size: 1.2rem; }
-    .navbar { display: flex; padding: 6px; gap: 4px; background: #f1f5f9; }
-    .nav-tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); }
-    .nav-tab.active { background: white; color: var(--azul-tec); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .view { display: none; padding: 20px; }
+    .app-container { background: var(--surface); width: 100%; max-width: 460px; min-height: 100vh; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.03); }
+    .header { background: linear-gradient(135deg, var(--azul-tec) 70%, var(--verde-milenio) 100%); color: white; padding: 24px 20px 20px 20px; text-align: left; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+    .header-badge { background: rgba(255, 255, 255, 0.15); color: white; font-size: 12px; padding: 6px 12px; border-radius: 20px; font-weight: 600; }
+    .navbar { display: flex; background: #f1f5f9; padding: 6px; margin: 16px 16px 8px 16px; border-radius: 14px; gap: 4px; }
+    .nav-tab { flex: 1; text-align: center; padding: 10px 0; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 10px; }
+    .nav-tab.active { background: var(--surface); color: var(--text-main); box-shadow: var(--shadow-sm); }
+    .view { display: none; width: 100%; }
     .view.active { display: block; }
-    .card { background: white; border: 1px solid var(--border); padding: 18px; margin-bottom: 15px; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .input-row { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; }
-    .btn-main { background: var(--azul-tec); color: white; width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; }
-    .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
-    .btn-qty { background: #f1f5f9; width: 32px; height: 32px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; }
+    .card { background: var(--surface); border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+    input { width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 15px; background-color: #fafafa; }
+    .btn-main { background: linear-gradient(135deg, var(--azul-tec), #001f4d); color: white; border: none; width: 100%; padding: 16px; border-radius: 14px; font-weight: 700; cursor: pointer; }
+    #modal-escaner { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #0b0f19; z-index: 9999; flex-direction: column; padding: 40px 20px; }
+    .cam-box { position: relative; width: 90%; max-width: 320px; aspect-ratio: 1; border-radius: 28px; overflow: hidden; align-self: center; background: #000; }
+    #lector-camara { width: 100%; height: 100%; }
   </style>
 </head>
 <body>
 
 <div class="app-container">
-  <div class="header">Gestión Institucional</div>
+  <div class="header">
+    <span>Gestión de Almacén</span>
+    <span class="header-badge">Premium POS</span>
+  </div>
+  
   <div class="navbar">
-    <div class="nav-tab active" onclick="cambiarPestaña('inventario')">Inventario</div>
-    <div class="nav-tab" onclick="cambiarPestaña('vender')">Vender</div>
-    <div class="nav-tab" onclick="cambiarPestaña('gestionar')">Gestionar</div>
+    <div class="nav-tab active" id="tab-inventario" onclick="cambiarPestaña('inventario')">Inventario</div>
+    <div class="nav-tab" id="tab-vender" onclick="cambiarPestaña('vender')">Vender</div>
+    <div class="nav-tab" id="tab-gestionar" onclick="cambiarPestaña('gestionar')">Gestionar</div>
   </div>
 
-  <div class="view active" id="view-inventario">
-    <input type="text" id="busqueda-inventario" class="input-row" placeholder="Buscar ID o nombre..." oninput="filtrarInventario()">
-    <div id="lista-inventario-cards"></div>
-  </div>
-
-  <div class="view" id="view-vender">
-    <div id="lector-camara" style="width:100%; height:200px; background:#000; border-radius:12px; margin-bottom:15px;"></div>
-    <div id="elementos-carrito"></div>
-    <button class="btn-main" style="background:var(--verde-milenio); margin-top:20px;" onclick="procesarCobro()">💵 COBRAR Y DESCONTAR</button>
-  </div>
-
-  <div class="view" id="view-gestionar">
-    <div class="card">
-      <button class="btn-main" onclick="generarReporteMensual()">Generar Archivo Mensual</button>
-      <div id="reporte-resultado" style="margin-top:10px; font-size:0.9rem;"></div>
+  <div class="content">
+    <div id="view-inventario" class="view active">
+      <div class="card">
+        <input type="text" id="busqueda-inventario" placeholder="Buscar ID o nombre..." oninput="filtrarInventario()">
+      </div>
+      <div id="lista-inventario-cards"></div>
     </div>
+
+    <div id="view-vender" class="view">
+      <div class="card">
+        <button class="btn-main" onclick="abrirEscaner('carrito')">📷 ESCANEAR ARTÍCULO</button>
+      </div>
+      <div id="elementos-carrito"></div>
+      <button class="btn-main" style="margin-top:20px; background:var(--verde-milenio);" onclick="procesarCobro()">💵 COBRAR Y DESCONTAR</button>
+    </div>
+
+    <div id="view-gestionar" class="view">
+      <div class="card">
+        <button class="btn-main" onclick="generarReporteMensual()">📊 Generar Reporte Mensual</button>
+        <div id="reporte-resultado" style="margin-top:15px; font-size: 14px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-escaner">
+    <button onclick="cerrarEscaner()" style="margin-bottom:20px; padding:10px;">CERRAR ESCÁNER</button>
+    <div class="cam-box"><div id="lector-camara"></div></div>
   </div>
 </div>
 
 <script>
-  const URL = "https://script.google.com/macros/s/AKfycbxsSsJDbg0KV_CoZI4xCoZjL4JNbOXhI2Cgk8FFXIkU-qg_tdd6NA7XskPW251Kloxx0g/exec";
+  const URL_API_SHEETS = "https://script.google.com/macros/s/AKfycbxsSsJDbg0KV_CoZI4xCoZjL4JNbOXhI2Cgk8FFXIkU-qg_tdd6NA7XskPW251Kloxx0g/exec";
   let inventarioLocal = [];
   let carrito = [];
+  let html5QrcodeScanner = null;
 
   window.onload = () => {
-    fetch(URL).then(r => r.json()).then(d => { inventarioLocal = d; renderizarInventario(d); });
-    let scanner = new Html5QrcodeScanner("lector-camara", { fps: 10, qrbox: 200 });
-    scanner.render(onScanSuccess);
+    fetch(URL_API_SHEETS).then(r => r.json()).then(d => { inventarioLocal = d; renderizarInventario(d); });
   };
+
+  function cambiarPestaña(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('view-' + id).classList.add('active');
+    document.getElementById('tab-' + id).classList.add('active');
+  }
 
   function renderizarInventario(arr) {
     document.getElementById("lista-inventario-cards").innerHTML = arr.map(p => `
       <div class="card">
-        <div style="font-weight:700; font-size:1.05rem; margin-bottom:5px;">${p.descripcion}</div>
-        <div style="font-size:0.85rem; color:var(--text-muted);">ID: ${p.codigo} | Stock: ${p.stock}</div>
+        <div style="font-weight:700;">${p.descripcion}</div>
+        <div style="font-size: 12px; color: var(--text-muted);">ID: ${p.codigo} | Stock: ${p.stock}</div>
       </div>
     `).join('');
   }
 
-  function onScanSuccess(decodedText) {
-    let p = inventarioLocal.find(x => x.codigo === decodedText);
-    if(p) {
-      carrito.push({ ...p, cantidad: 1 });
-      renderizarCarrito();
-      alert("Agregado: " + p.descripcion);
-    }
-  }
-
-  function renderizarCarrito() {
-    document.getElementById("elementos-carrito").innerHTML = carrito.map((item, i) => `
-      <div class="cart-item">
-        <div>${item.descripcion}</div>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <button class="btn-qty" onclick="cambiarCant(${i}, -1)">-</button>
-          <span>${item.cantidad}</span>
-          <button class="btn-qty" onclick="cambiarCant(${i}, 1)">+</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function cambiarCant(i, delta) {
-    carrito[i].cantidad = Math.max(1, carrito[i].cantidad + delta);
-    renderizarCarrito();
-  }
-
-  function procesarCobro() {
-    fetch(URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "cobrar", datos: carrito }) })
-      .then(() => { alert("Venta registrada correctamente"); carrito = []; renderizarCarrito(); });
-  }
-
-  function generarReporteMensual() {
-    fetch(URL + "?accion=generarMensual").then(r => r.json()).then(d => {
-      document.getElementById("reporte-resultado").innerText = "Archivo generado con éxito: " + d.url;
+  function abrirEscaner(ctx) {
+    document.getElementById('modal-escaner').style.display = 'flex';
+    html5QrcodeScanner = new Html5QrcodeScanner("lector-camara", { fps: 24, qrbox: 200 });
+    html5QrcodeScanner.render(txt => {
+      cerrarEscaner();
+      if(ctx === 'carrito') agregarAlCarrito(txt);
     });
   }
 
-  function cambiarPestaña(id) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById('view-' + id).classList.add('active');
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+  function cerrarEscaner() {
+    if(html5QrcodeScanner) html5QrcodeScanner.clear().then(() => { document.getElementById('modal-escaner').style.display = 'none'; });
+  }
+
+  function agregarAlCarrito(cod) {
+    let p = inventarioLocal.find(x => x.codigo === cod);
+    if(p) {
+      carrito.push({...p, cantidad: 1});
+      document.getElementById("elementos-carrito").innerHTML += `<div class="card">${p.descripcion}</div>`;
+      alert("Agregado al carrito");
+    } else { alert("Producto no encontrado"); }
+  }
+
+  function procesarCobro() {
+    fetch(URL_API_SHEETS, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "cobrar", datos: carrito }) })
+      .then(() => { alert("Venta registrada"); carrito = []; document.getElementById("elementos-carrito").innerHTML = ""; });
+  }
+
+  function generarReporteMensual() {
+    fetch(URL_API_SHEETS + "?accion=generarMensual").then(r => r.json()).then(d => {
+      document.getElementById("reporte-resultado").innerText = "Resultado: " + d.url;
+    });
   }
 
   function filtrarInventario() {
     let txt = document.getElementById("busqueda-inventario").value.toLowerCase();
-    let filtrados = inventarioLocal.filter(p => p.descripcion.toLowerCase().includes(txt) || p.codigo.includes(txt));
-    renderizarInventario(filtrados);
+    renderizarInventario(inventarioLocal.filter(p => p.descripcion.toLowerCase().includes(txt) || p.codigo.includes(txt)));
   }
 </script>
 </body>
