@@ -3,92 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Premium Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Sistema Institucional de Gestión</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --azul: #002F6C; --verde: #82BC00; --bg: #f8fafc; --shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; }
+        :root { --main: #002F6C; --accent: #82BC00; --bg: #f8fafc; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; padding: 0; color: #1e293b; }
+        .nav-bar { display: flex; background: #fff; padding: 15px; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100; }
+        .nav-btn { flex: 1; border: none; background: none; font-weight: 700; color: #64748b; padding: 10px; }
+        .nav-btn.active { color: var(--main); border-bottom: 2px solid var(--main); }
         .view { display: none; padding: 20px; }
         .view.active { display: block; }
-        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        input { width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; margin: 8px 0; }
-        button { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-main { background: var(--azul); color: white; }
-        .btn-complete { background: var(--verde); color: white; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; display: flex; background: white; padding: 20px; border-top: 1px solid #edf2f7; }
-        .tab { flex: 1; text-align: center; font-weight: 700; color: #94a3b8; }
-        .tab.active { color: var(--azul); }
-        #modal-scanner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 99; flex-direction: column; }
+        .card { background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 12px; box-sizing: border-box; }
+        button.action-btn { background: var(--main); color: white; padding: 15px; border-radius: 12px; border: none; font-weight: 700; width: 100%; cursor: pointer; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        #reader { width: 100%; max-width: 400px; margin: 10px auto; }
     </style>
 </head>
 <body>
 
-    <div id="view-inventario" class="view active">
-        <h2>Inventario</h2>
-        <input type="text" id="busqueda-inv" placeholder="Escanear o buscar código...">
-        <div id="grid-inventario" class="grid"></div>
+<div class="nav-bar">
+    <button class="nav-btn active" onclick="show('inventario')">Inventario</button>
+    <button class="nav-btn" onclick="show('vender')">Vender</button>
+    <button class="nav-btn" onclick="show('gestion')">Gestión</button>
+</div>
+
+<div id="inventario" class="view active">
+    <div class="card">
+        <h3>Control de Inventario</h3>
+        <input type="text" id="inv-input" placeholder="Escanear o código manual">
+        <button class="action-btn" onclick="buscarProducto()">Buscar Producto</button>
+        <div id="inv-details" style="margin-top: 20px;"></div>
     </div>
+</div>
 
-    <div id="view-vender" class="view">
-        <h2>Vender</h2>
-        <input type="text" id="busqueda-venta" placeholder="Escanear producto...">
-        <div id="carrito-container"></div>
-        <div class="card">
-            <h3>Total: <span id="total-monto">$0.00</span></h3>
-            <button class="btn-complete" onclick="completarVenta()">COMPLETAR</button>
-        </div>
+<div id="vender" class="view">
+    <div class="card">
+        <h3>Carrito de Ventas</h3>
+        <input type="text" id="cart-input" placeholder="Código de barras">
+        <button class="action-btn" onclick="agregarAlCarrito()">Agregar al Carrito</button>
+        <div id="cart-list"></div>
+        <div id="total-display" style="font-size: 20px; font-weight: 800; margin: 20px 0;">Total: $0.00</div>
+        <button class="action-btn" style="background: var(--accent);" onclick="cobrar()">COBRAR Y DESCONTAR</button>
     </div>
+</div>
 
-    <div id="view-gestion" class="view">
-        <h2>Gestión</h2>
-        <div class="card">
-            <button class="btn-main" onclick="descargarXLS()">📥 Descargar Reporte Mensual (XLS)</button>
-        </div>
+<div id="gestion" class="view">
+    <div class="card">
+        <h3>Reporte de Ventas</h3>
+        <button class="action-btn" onclick="cargarReporte()">Generar Reporte del Mes</button>
+        <div id="report-content" style="margin-top: 20px;"></div>
     </div>
+</div>
 
-    <div class="nav-bar">
-        <div class="tab active" onclick="switchView('inventario')">Inventario</div>
-        <div class="tab" onclick="switchView('vender')">Vender</div>
-        <div class="tab" onclick="switchView('gestion')">Gestión</div>
-    </div>
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxsSsJDbg0KV_CoZI4xCoZjL4JNbOXhI2Cgk8FFXIkU-qg_tdd6NA7XskPW251Kloxx0g/exec";
+    let state = { carrito: [], total: 0 };
 
-    <script>
-        let carrito = [];
-        const URL_SHEETS = "TU_URL_AQUÍ";
+    function show(id) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.target.classList.add('active');
+    }
 
-        function switchView(id) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-' + id).classList.add('active');
-            document.querySelectorAll('.tab').forEach((t, i) => {
-                t.classList.toggle('active', t.innerText.toLowerCase() === id);
-            });
-        }
+    async function buscarProducto() {
+        let code = document.getElementById('inv-input').value;
+        let res = await fetch(`${API_URL}?code=${code}`);
+        let p = await res.json();
+        document.getElementById('inv-details').innerHTML = `
+            <p><strong>Producto:</strong> ${p.descripcion}</p>
+            <p><strong>Stock Disponible:</strong> ${p.stock}</p>
+            <p><strong>Precio:</strong> $${p.precio}</p>
+        `;
+    }
 
-        async function completarVenta() {
-            if(carrito.length === 0) return alert("Carrito vacío");
-            const res = await fetch(URL_SHEETS, { method: 'POST', body: JSON.stringify({ carrito }) });
-            if(res.ok) {
-                carrito = [];
-                document.getElementById('total-monto').innerText = "$0.00";
-                document.getElementById('carrito-container').innerHTML = "";
-                alert("Venta procesada correctamente");
-            }
-        }
+    function agregarAlCarrito() {
+        let code = document.getElementById('cart-input').value;
+        let item = state.carrito.find(i => i.code === code);
+        if(item) { item.cantidad++; } else { state.carrito.push({code: code, cantidad: 1, precio: 100}); }
+        renderCart();
+    }
 
-        async function descargarXLS() {
-            window.location.href = URL_SHEETS + "?accion=descargar_xls";
-        }
+    function renderCart() {
+        const list = document.getElementById('cart-list');
+        list.innerHTML = state.carrito.map((i, idx) => `
+            <div class="cart-item">
+                <span>Producto ${i.code} (x${i.cantidad})</span>
+                <button onclick="state.carrito.splice(${idx},1); renderCart()">Eliminar</button>
+            </div>
+        `).join('');
+    }
 
-        // Lógica de escaneo profesional
-        function initScanner(callback) {
-            document.getElementById('modal-scanner').style.display = 'flex';
-            new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }).render(txt => {
-                document.getElementById('modal-scanner').style.display = 'none';
-                callback(txt);
-            });
-        }
-    </script>
+    async function cobrar() {
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify({action: 'cobrar', data: state.carrito}) });
+        alert("Venta registrada con éxito");
+        state.carrito = []; renderCart();
+    }
+
+    async function cargarReporte() {
+        let res = await fetch(`${API_URL}?action=reporte`);
+        let data = await res.json();
+        document.getElementById('report-content').innerHTML = JSON.stringify(data);
+    }
+</script>
 </body>
 </html>
