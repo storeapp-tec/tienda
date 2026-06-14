@@ -10,27 +10,19 @@
     :root { --primary: #002F6C; --secondary: #10b981; --bg: #F8FAFC; --surface: #FFFFFF; --text-main: #0F172A; --text-muted: #64748B; --border: #E2E8F0; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
     body { background-color: var(--bg); color: var(--text-main); }
-    .app { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--surface); display: flex; flex-direction: column; }
-    
-    .header { background: var(--primary); color: white; padding: 20px; font-weight: 700; font-size: 1.25rem; }
+    .app { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--surface); }
+    .header { background: var(--primary); color: white; padding: 20px; font-weight: 700; font-size: 1.2rem; }
     .tabs { display: flex; border-bottom: 1px solid var(--border); background: white; }
-    .tab { flex: 1; padding: 16px; text-align: center; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; }
+    .tab { flex: 1; padding: 15px; text-align: center; font-weight: 600; color: var(--text-muted); cursor: pointer; }
     .tab.active { border-bottom: 3px solid var(--primary); color: var(--primary); }
-    .view { display: none; padding: 20px; flex: 1; }
+    .view { display: none; padding: 20px; }
     .view.active { display: block; }
-    
-    .card { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; margin-bottom: 12px; background: #FAFAFA; }
-    
-    .item { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); }
-    .info { flex: 1; min-width: 0; }
-    .title { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
-    .meta { font-size: 0.8rem; color: var(--text-muted); }
-    
-    .btn { padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .btn-qty { background: #F1F5F9; width: 36px; height: 36px; font-size: 1.1rem; border-radius: 8px; }
-    .btn-main { background: var(--primary); color: white; width: 100%; }
-    #modal-cam { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 100; }
+    .card { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+    input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: #FAFAFA; }
+    .item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .btn { padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; width: 100%; }
+    .btn-main { background: var(--primary); color: white; }
+    .btn-qty { background: #F1F5F9; width: 35px; height: 35px; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -38,115 +30,117 @@
 <div class="app">
   <div class="header">Gestión Institucional</div>
   <div class="tabs">
-    <div class="tab active" onclick="switchView('inventario', this)">Inventario</div>
-    <div class="tab" onclick="switchView('vender', this)">Vender</div>
-    <div class="tab" onclick="switchView('gestionar', this)">Gestionar</div>
+    <div class="tab active" onclick="show('inventario', this)">Inventario</div>
+    <div class="tab" onclick="show('vender', this)">Vender</div>
+    <div class="tab" onclick="show('gestionar', this)">Gestionar</div>
   </div>
 
   <div id="inventario" class="view active">
     <div class="card">
-      <input type="text" id="busqueda-inventario" placeholder="Buscar producto..." oninput="filtrarInventario()">
-      <div id="card-registro" style="display:none; border-top:1px solid #eee; padding-top:10px;">
-        <div id="stock-info" style="font-weight:600; margin-bottom:10px;">Stock Actual: ...</div>
-        <input type="number" id="reg-stock" placeholder="Cantidad a sumar">
-        <button class="btn btn-main" onclick="guardarStock()">Guardar en Sheets</button>
+      <input type="text" id="bus-inv" placeholder="Buscar producto..." oninput="filtrarInv()">
+      <div id="ctrl-inv" style="display:none; margin-top:10px;">
+        <div id="stock-info" style="font-weight:600; margin-bottom:5px;">Stock Actual: ...</div>
+        <input type="number" id="sumar-cant" placeholder="Cantidad a sumar">
+        <button class="btn btn-main" onclick="guardarStock()">Actualizar Inventario</button>
       </div>
     </div>
-    <div id="lista-inventario"></div>
+    <div id="lista-inv"></div>
   </div>
 
   <div id="vender" class="view">
     <div class="card">
-      <input type="text" id="busqueda-venta" placeholder="Escanear o escribir código..." onchange="agregarAlCarrito(this.value)">
+      <input type="text" id="bus-ven" placeholder="Escanear código..." onchange="agregarAlCarrito(this.value)">
       <div id="carrito-lista"></div>
-      <div style="font-size:1.2rem; font-weight:700; text-align:right; margin-top:15px;">Total: <span id="total-monto">$0</span></div>
-      <button class="btn btn-main" style="margin-top:15px; background:var(--secondary);" onclick="procesarCobro()">COBRAR Y DESCONTAR</button>
+      <div style="text-align:right; font-weight:700; margin:10px 0;">Total: <span id="total-monto">$0</span></div>
+      <button class="btn btn-main" style="background:var(--secondary);" onclick="cobrar()">COBRAR Y DESCONTAR</button>
     </div>
   </div>
 
   <div id="gestionar" class="view">
-    <div class="card" style="text-align:center;">
-      <h3 style="margin-bottom:15px;">Monitoreo</h3>
-      <button class="btn btn-main" onclick="cargarVentas()">Ver Ventas del Mes</button>
-      <div id="ventas-log" style="margin-top:20px; text-align:left;"></div>
+    <div class="card">
+      <button class="btn btn-main" onclick="cargarVentas()">Ver Reporte de Ventas</button>
+      <div id="ventas-res" style="margin-top:15px;"></div>
     </div>
   </div>
 </div>
 
-<div id="modal-cam"><div id="reader"></div><button onclick="cerrarCam()" class="btn btn-main">Cerrar</button></div>
-
 <script>
-  const URL_API = "TU_URL_DE_APPS_SCRIPT_AQUÍ"; // RECUERDA PEGAR TU URL AQUÍ
-  let inventario = [], carrito = [];
+  const URL = "https://script.google.com/macros/s/AKfycbxsSsJDbg0KV_CoZI4xCoZjL4JNbOXhI2Cgk8FFXIkU-qg_tdd6NA7XskPW251Kloxx0g/exec";
+  let inv = [], cart = [];
 
-  // --- LÓGICA DE DATOS ---
-  fetch(URL_API).then(r => r.json()).then(d => { inventario = d; renderInventario(); });
+  // Carga inicial
+  fetch(URL).then(r => r.json()).then(d => { inv = d; renderInv(); });
 
-  function switchView(id, el) {
+  function show(id, el) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    el.classList.add('active');
+    if(el) el.classList.add('active');
   }
 
-  function renderInventario() {
-    document.getElementById("lista-inventario").innerHTML = inventario.map(p => `
+  function renderInv() {
+    document.getElementById("lista-inv").innerHTML = inv.map(p => `
       <div class="item">
-        <div class="info">
-          <div class="title">${p.descripcion}</div>
-          <div class="meta">Stock: ${p.stock} | $${p.precio}</div>
+        <div style="min-width:0; overflow:hidden;">
+          <div style="font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.descripcion}</div>
+          <div style="font-size:0.8rem; color:#64748B;">Stock: ${p.stock} | $${p.precio}</div>
         </div>
       </div>
     `).join('');
   }
 
-  function filtrarInventario() {
-    let txt = document.getElementById("busqueda-inventario").value;
-    let p = inventario.find(x => x.codigo === txt);
+  function filtrarInv() {
+    let txt = document.getElementById("bus-inv").value.toLowerCase();
+    let p = inv.find(x => x.codigo === txt);
     if(p) {
-      document.getElementById("card-registro").style.display = "block";
+      document.getElementById("ctrl-inv").style.display = "block";
       document.getElementById("stock-info").innerText = "Stock Actual: " + p.stock;
     }
   }
 
   function agregarAlCarrito(cod) {
-    let p = inventario.find(x => x.codigo === cod);
+    let p = inv.find(x => x.codigo === cod);
     if(p) {
-      carrito.push({ ...p, cantidad: 1 });
+      cart.push({ ...p, cantidad: 1 });
       renderCarrito();
     }
   }
 
   function renderCarrito() {
-    document.getElementById("carrito-lista").innerHTML = carrito.map((item, index) => `
+    document.getElementById("carrito-lista").innerHTML = cart.map((item, i) => `
       <div class="item">
-        <div class="info">
-          <div class="title">${item.descripcion}</div>
-          <div class="meta">$${item.precio} c/u</div>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <button class="btn-qty" onclick="cambiarCant(${index}, -1)">-</button>
-          <span>${item.cantidad}</span>
-          <button class="btn-qty" onclick="cambiarCant(${index}, 1)">+</button>
+        <div>${item.descripcion}</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn-qty" onclick="cambiarCant(${i}, -1)">-</button>
+          <span style="width:20px; text-align:center;">${item.cantidad}</span>
+          <button class="btn-qty" onclick="cambiarCant(${i}, 1)">+</button>
         </div>
       </div>
     `).join('');
-    // Actualizar total...
+    let tot = cart.reduce((s, i) => s + (i.precio * i.cantidad), 0);
+    document.getElementById("total-monto").innerText = "$" + tot.toLocaleString();
   }
 
   function cambiarCant(i, d) {
-    carrito[i].cantidad = Math.max(1, carrito[i].cantidad + d);
+    cart[i].cantidad = Math.max(1, cart[i].cantidad + d);
     renderCarrito();
   }
 
-  function procesarCobro() {
-    fetch(URL_API, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "cobrar", datos: carrito }) })
-      .then(() => alert("Venta exitosa"));
+  function guardarStock() {
+    let cod = document.getElementById("bus-inv").value;
+    let cant = document.getElementById("sumar-cant").value;
+    fetch(URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "guardar", datos: {codigo: cod, sumar: cant} }) })
+      .then(() => alert("¡Base de datos actualizada!"));
+  }
+
+  function cobrar() {
+    fetch(URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ accion: "cobrar", datos: cart }) })
+      .then(() => { alert("Venta exitosa"); cart = []; renderCarrito(); });
   }
 
   function cargarVentas() {
-    fetch(URL_API + "?get=ventas").then(r => r.json()).then(d => {
-       document.getElementById("ventas-log").innerHTML = JSON.stringify(d);
+    fetch(URL + "?get=ventas").then(r => r.json()).then(d => {
+       document.getElementById("ventas-res").innerHTML = d.map(v => `<div>${v.fecha}: $${v.total}</div>`).join('');
     });
   }
 </script>
