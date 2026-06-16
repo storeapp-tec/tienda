@@ -1,0 +1,23 @@
+{
+  "name": "Store",
+  "short_name": "Store",
+  "description": "Sistema de inventario y punto de venta",
+  "start_url": "/tienda/",
+  "display": "standalone",
+  "background_color": "#F5F7FA",
+  "theme_color": "#003D4D",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>",
+      "sizes": "100x100",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
