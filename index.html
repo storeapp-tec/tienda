@@ -521,4 +521,76 @@ function renderizarCarrito() {
   function renderGrupo(items, titulo, emoji) {
     let h = '';
     let subt = 0;
-    if (mostrarCategor
+    if (mostrarCategorias && items.length > 0) {
+      h += `<div class="cart-category-header">${emoji} ${titulo}</div>`;
+    }
+    items.forEach(item => {
+      let sub = item.cantidad * Number(item.precio);
+      subt += sub; ta += item.cantidad; tm += sub;
+      h += `<div class="cart-item">
+        <div class="cart-info"><div class="cart-id">${item.id}</div><div class="cart-name">${item.descripcion}</div><div class="cart-unit">$${Number(item.precio).toFixed(2)} c/u</div></div>
+        <div class="cart-controls"><button class="btn btn-outline btn-sm" onclick="cambiarCantidad('${item.id}',-1)">−</button><input class="cart-qty" value="${item.cantidad}" onchange="editarCantidad('${item.id}',this)"><button class="btn btn-outline btn-sm" onclick="cambiarCantidad('${item.id}',1)">+</button></div>
+        <div class="cart-subtotal">$${sub.toFixed(2)}</div>
+        <button class="btn-delete" onclick="eliminarItem('${item.id}')">✕</button></div>`;
+    });
+    if (mostrarCategorias && items.length > 0) {
+      h += `<div class="cart-category-subtotal">Subtotal ${titulo}: $${subt.toFixed(2)}</div>`;
+    }
+    return h;
+  }
+  
+  html += renderGrupo(tec, 'Tec de Monterrey', '🏛️');
+  html += renderGrupo(mil, 'Tec Milenio', '🎓');
+  
+  c.innerHTML = html;
+  document.getElementById('total-articulos').textContent = `📦 ${ta} artículos`;
+  document.getElementById('total-monto').textContent = `$${tm.toFixed(2)}`;
+}
+
+// ─── COBRO ───
+function seleccionarPago(el, tipo) {
+  document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  tipoPagoSeleccionado = tipo;
+}
+
+function cobrar() {
+  if(!carrito.length) return mostrarToast('Vacío');
+  if(!requiereUsuario()) return;
+  let total = document.getElementById('total-monto').textContent.replace('$','');
+  if (tipoPagoSeleccionado === 'Empleado') {
+    total = (parseFloat(total) * 0.8).toFixed(2);
+  }
+  document.getElementById('modal-monto').textContent = 'Total: $' + total + (tipoPagoSeleccionado === 'Empleado' ? ' (-20%)' : '');
+  document.getElementById('modal-confirm').style.display = 'flex';
+}
+
+function cerrarModal() { document.getElementById('modal-confirm').style.display = 'none'; }
+
+function ejecutarCobro() {
+  cerrarModal();
+  // Aplicar descuento si es empleado
+  let carritoCobro = carrito.map(item => {
+    let precio = tipoPagoSeleccionado === 'Empleado' ? Number(item.precio) * 0.8 : Number(item.precio);
+    return {...item, precio};
+  });
+  
+  fetch(URL_API, { method: 'POST', body: JSON.stringify({ accion: 'cobrar', vendedor: usuarioActual, tipoPago: tipoPagoSeleccionado, datos: carritoCobro }) })
+    .then(() => { mostrarToast('✅ Venta registrada'); carrito = []; renderizarCarrito(); cargarProductos(); });
+}
+
+// ─── REGISTROS ───
+function cargarArchivos(){ fetch(URL_API+'?obtener=archivos').then(r=>r.json()).then(d=>{ document.getElementById('lista-archivos').innerHTML=d.length?d.map(a=>`<div>📁 ${a}</div>`).join(''):'<p>Sin archivos</p>'; }); }
+
+function verVentas(cat) {
+  fetch(URL_API+'?obtener=ventas_'+cat).then(r=>r.json()).then(d=>{
+    document.getElementById('card-ventas').style.display='block';
+    document.getElementById('titulo-ventas').textContent='📊 '+ (cat==='TEC'?'Tec de Monterrey':'Tec Milenio');
+    document.getElementById('tabla-ventas').innerHTML=d.length?`<table style="width:100%;font-size:0.7rem;">${d.map(t=>`<tr style="border-bottom:1px solid #eee;"><td>${t.fecha}</td><td>${t.producto}</td><td>${t.cantidad}</td><td>$${t.total}</td><td style="font-size:0.65rem;color:#666;">${t.vendedor||''}</td><td style="font-size:0.6rem;color:#999;">${t.tipoPago||''}</td></tr>`).join('')}</table>`:'<p style="color:#999">Sin ventas</p>';
+  });
+}
+
+function descargarActual(){ fetch(URL_API,{method:'POST',body:JSON.stringify({accion:'descargar_actual'})}).then(r=>r.json()).then(d=>window.open(d.url,'_blank')); }
+</script>
+</body>
+</html>
