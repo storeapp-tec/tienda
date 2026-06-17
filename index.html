@@ -49,11 +49,7 @@
       z-index: 100;
     }
     .header-left { display: flex; align-items: center; gap: 8px; }
-    .header-logo-box {
-      width: 34px; height: 34px; border-radius: 9px;
-      background: var(--primary); display: flex;
-      align-items: center; justify-content: center; flex-shrink: 0;
-    }
+    .header-logo-box { width: 34px; height: 34px; border-radius: 9px; background: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .header-logo { width: 18px; height: 18px; object-fit: contain; filter: brightness(0) invert(1); }
     .header-title { font-size: 1.05rem; font-weight: 700; color: var(--primary); }
     .header-user { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 500; color: var(--text-secondary); }
@@ -64,7 +60,7 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     
     .card { background: var(--surface); border-radius: var(--radius); padding: 10px; margin-bottom: 7px; box-shadow: var(--shadow); }
-    .card-header { font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+    .card-header { font-size: 0.85rem; font-weight: 600; }
     
     .input-row { display: flex; gap: 5px; align-items: center; margin-bottom: 6px; }
     input[type="text"], input[type="number"], select {
@@ -91,32 +87,28 @@
     .btn-sm { padding: 3px 8px; font-size: 0.68rem; border-radius: 6px; }
     .btn-xs { padding: 2px 6px; font-size: 0.65rem; border-radius: 5px; }
     
-    /* Producto compacto */
     .product-item {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 10px; border-bottom: 1px solid var(--border);
+      padding: 10px; border-bottom: 1px solid var(--border); gap: 10px;
     }
     .product-item.critical {
       border-left: 3px solid var(--danger); background: #FFF5F5;
       animation: pulseBorder 1.8s ease-in-out infinite;
     }
-    @keyframes pulseBorder {
-      0%,100%{border-left-color:var(--danger);}
-      50%{border-left-color:#FF6B6B;}
-    }
+    @keyframes pulseBorder { 0%,100%{border-left-color:var(--danger);} 50%{border-left-color:#FF6B6B;} }
     .product-main { flex: 1; min-width: 0; }
-    .product-top { display: flex; align-items: center; gap: 6px; }
-    .product-id { font-size: 0.8rem; font-weight: 600; }
-    .product-name { font-size: 0.78rem; color: var(--text-secondary); }
+    .product-id { font-size: 0.82rem; font-weight: 600; margin-bottom: 1px; }
+    .product-name { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 3px; }
+    .product-meta { display: flex; align-items: center; gap: 8px; }
     .product-cat { font-size: 0.6rem; background: #E8F5E9; color: #1B998B; padding: 1px 5px; border-radius: 3px; }
-    .product-bottom { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
-    .product-stock { font-size: 0.7rem; font-weight: 500; }
-    .stock-normal { color: #1B998B; }
-    .stock-low { color: #E6A817; }
-    .stock-critical { color: #D64545; font-weight: 600; }
-    .product-price { font-weight: 700; color: var(--primary); font-size: 0.85rem; white-space: nowrap; }
+    .product-stock { font-size: 0.7rem; font-weight: 500; display: flex; align-items: center; gap: 3px; }
+    .stock-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .stock-dot.normal { background: #1B998B; }
+    .stock-dot.low { background: #E6A817; }
+    .stock-dot.critical { background: #D64545; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.5);} }
+    .product-price { font-weight: 700; color: var(--primary); font-size: 0.88rem; white-space: nowrap; }
     
-    /* Ticket */
     .cart-item {
       display: flex; align-items: center; gap: 4px;
       padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.7rem;
@@ -126,22 +118,13 @@
     .cart-name { font-size: 0.66rem; color: var(--text-secondary); }
     .cart-unit { font-size: 0.63rem; color: var(--text-secondary); }
     .cart-controls { display: flex; align-items: center; gap: 2px; }
-    .cart-qty {
-      width: 26px; text-align: center; font-weight: 600; font-size: 0.68rem;
-      border: 1px solid var(--border); border-radius: 4px; padding: 2px; background: var(--bg);
-    }
+    .cart-qty { width: 26px; text-align: center; font-weight: 600; font-size: 0.68rem; border: 1px solid var(--border); border-radius: 4px; padding: 2px; background: var(--bg); }
     .cart-subtotal { font-weight: 600; color: var(--primary); min-width: 38px; text-align: right; font-size: 0.7rem; }
-    .btn-delete {
-      background: none; border: none; color: #bbb; font-size: 0.7rem;
-      cursor: pointer; padding: 1px 3px; border-radius: 50%; flex-shrink: 0;
-    }
+    .btn-delete { background: none; border: none; color: #bbb; font-size: 0.7rem; cursor: pointer; padding: 1px 3px; border-radius: 50%; flex-shrink: 0; }
     .btn-delete:active { color: var(--danger); }
     
     #lista-carrito { max-height: 260px; overflow-y: auto; }
-    .cart-category-header {
-      font-size: 0.68rem; font-weight: 600; padding: 3px 0; margin-top: 2px;
-      color: var(--primary); border-bottom: 2px solid var(--accent);
-    }
+    .cart-category-header { font-size: 0.68rem; font-weight: 600; padding: 3px 0; margin-top: 2px; color: var(--primary); border-bottom: 2px solid var(--accent); }
     .cart-category-subtotal { font-size: 0.66rem; color: var(--text-secondary); text-align: right; padding: 2px 0; }
     
     .totals-bar {
@@ -151,12 +134,9 @@
     .totals-items { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px; }
     .totals-amount { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
     
-    /* Menú ⋮ */
-    .menu-container { position: relative; display: inline-block; }
-    .menu-btn {
-      background: none; border: none; font-size: 1.3rem; cursor: pointer;
-      padding: 4px 8px; border-radius: 6px; color: var(--text-secondary);
-    }
+    .ticket-header-row { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 6px; }
+    .menu-container { position: relative; }
+    .menu-btn { background: none; border: none; font-size: 1.3rem; cursor: pointer; padding: 2px 6px; border-radius: 6px; color: var(--text-secondary); }
     .menu-dropdown {
       display: none; position: absolute; top: 100%; right: 0;
       background: var(--surface); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
@@ -165,82 +145,44 @@
     }
     .menu-dropdown.show { display: block; }
     @keyframes dropIn { from{opacity:0;transform:translateY(-6px);} to{opacity:1;transform:translateY(0);} }
-    .menu-item {
-      display: flex; align-items: center; gap: 8px; padding: 10px 12px;
-      border-radius: 8px; font-size: 0.78rem; cursor: pointer;
-    }
-    .menu-item:active { background: var(--bg); }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; }
+    .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+    .checkbox-row label { font-size: 0.76rem; font-weight: 500; }
+    .devolution-options { margin-top: 6px; }
     
-    /* Checkbox personalizado */
-    .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
-    .checkbox-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
-    .checkbox-row label { font-size: 0.8rem; font-weight: 500; }
-    
-    .devolution-options { margin-top: 6px; animation: fadeIn 0.2s ease; }
-    
-    /* Bottom nav */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; width: 100%;
       background: var(--surface); display: flex;
       box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 1000;
       padding: 4px 0; padding-bottom: env(safe-area-inset-bottom, 4px);
     }
-    .nav-item {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      gap: 2px; padding: 5px; color: var(--text-secondary);
-      font-size: 0.64rem; font-weight: 500; cursor: pointer; position: relative;
-    }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px; color: var(--text-secondary); font-size: 0.64rem; font-weight: 500; cursor: pointer; position: relative; }
     .nav-item.active { color: var(--primary); font-weight: 600; }
     .nav-icon { font-size: 1.2rem; }
     .badge {
       position: absolute; top: 0; right: calc(50% - 16px);
       background: var(--danger); color: white; font-size: 0.6rem;
       font-weight: 700; padding: 2px 6px; border-radius: 10px;
-      display: none; animation: pulse 1.5s ease-in-out infinite;
+      display: none; animation: pulseBadge 1.5s ease-in-out infinite;
     }
-    @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.25);} }
+    @keyframes pulseBadge { 0%,100%{transform:scale(1);} 50%{transform:scale(1.25);} }
     
-    #scanner-modal {
-      display: none; position: fixed; top: 0; left: 0;
-      width: 100vw; height: 100vh; background: rgba(0,0,0,0.95);
-      z-index: 9999; flex-direction: column; justify-content: center; align-items: center;
-    }
-    #scanner-viewport {
-      width: 90%; max-width: 280px; aspect-ratio: 1;
-      border-radius: 18px; overflow: hidden; border: 3px solid var(--accent); position: relative;
-    }
-    .laser-line {
-      position: absolute; top: 50%; left: 5%; width: 90%; height: 2px;
-      background: #FF3B30; box-shadow: 0 0 6px #FF3B30;
-      animation: laser 2s ease-in-out infinite; z-index: 10;
-    }
+    #scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+    #scanner-viewport { width: 90%; max-width: 280px; aspect-ratio: 1; border-radius: 18px; overflow: hidden; border: 3px solid var(--accent); position: relative; }
+    .laser-line { position: absolute; top: 50%; left: 5%; width: 90%; height: 2px; background: #FF3B30; box-shadow: 0 0 6px #FF3B30; animation: laser 2s ease-in-out infinite; z-index: 10; }
     @keyframes laser { 0%,100%{top:20%;} 50%{top:80%;} }
     #close-scanner { margin-top: 18px; background: none; border: none; color: white; font-size: 1.8rem; cursor: pointer; }
     
     .empty-state { text-align: center; padding: 15px; color: var(--text-secondary); font-size: 0.78rem; }
-    .toast {
-      position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
-      background: #333; color: white; padding: 8px 18px; border-radius: 10px;
-      font-weight: 500; z-index: 10000; display: none; font-size: 0.78rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
+    .toast { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 18px; border-radius: 10px; font-weight: 500; z-index: 10000; display: none; font-size: 0.78rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
     
     .stock-label { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px; }
     .stock-value { font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
     .price-row, .stock-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
     .price-row input, .stock-row input { flex: 1; }
     
-    .modal-overlay {
-      display: none; position: fixed; top: 0; left: 0;
-      width: 100vw; height: 100vh; background: rgba(0,0,0,0.6);
-      z-index: 10001; justify-content: center; align-items: center;
-    }
-    .modal-box {
-      background: var(--surface); border-radius: 20px;
-      padding: 20px; width: 90%; max-width: 340px;
-      text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.25);
-      animation: modalIn 0.25s ease;
-    }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center; }
+    .modal-box { background: var(--surface); border-radius: 20px; padding: 20px; width: 90%; max-width: 340px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.25); animation: modalIn 0.25s ease; }
     @keyframes modalIn { from{opacity:0;transform:scale(0.9);} to{opacity:1;transform:scale(1);} }
     .modal-icon { font-size: 2.5rem; margin-bottom: 8px; }
     .modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
@@ -248,11 +190,7 @@
     .modal-buttons { display: flex; gap: 6px; margin-top: 8px; }
     .modal-buttons button { flex: 1; }
     .payment-options { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
-    .payment-btn {
-      flex: 1; min-width: 45%; padding: 10px; border: 2px solid var(--border);
-      border-radius: 10px; background: var(--surface); font-weight: 500;
-      font-size: 0.78rem; cursor: pointer; text-align: center;
-    }
+    .payment-btn { flex: 1; min-width: 45%; padding: 10px; border: 2px solid var(--border); border-radius: 10px; background: var(--surface); font-weight: 500; font-size: 0.78rem; cursor: pointer; text-align: center; }
     .payment-btn.selected { border-color: var(--accent); background: #E8F8F5; color: var(--accent); font-weight: 600; }
     
     .welcome-box { text-align: center; padding: 40px 20px; }
@@ -278,15 +216,11 @@
       <div class="header-logo-box"><img src="icon.svg" alt="Store" class="header-logo"></div>
       <span class="header-title">Store</span>
     </div>
-    <div class="header-user" id="header-usuario">
-      <span>👤</span>
-      <span id="nombre-usuario-header"></span>
-    </div>
+    <div class="header-user" id="header-usuario"><span>👤</span><span id="nombre-usuario-header"></span></div>
   </div>
 
   <div class="main-content">
     
-    <!-- PRODUCTOS -->
     <div id="vista-productos" class="view active">
       <div class="card"><div class="input-row"><input type="text" id="busqueda-producto" placeholder="Código o nombre..."><button class="btn btn-primary btn-icon" onclick="abrirEscaner('productos')">📷</button></div></div>
       <div class="card" id="card-edicion" style="display:none;">
@@ -301,33 +235,26 @@
       <div class="card"><div class="card-header">📦 Catálogo</div><div id="lista-productos">Cargando...</div></div>
     </div>
     
-    <!-- VENDER -->
     <div id="vista-vender" class="view">
       <div class="card">
-        <div class="input-row">
-          <input type="text" id="input-codigo-vender" placeholder="Escanea o código...">
-          <button class="btn btn-primary btn-icon" onclick="abrirEscaner('vender')">📷</button>
+        <div class="input-row"><input type="text" id="input-codigo-vender" placeholder="Escanea o código..."><button class="btn btn-primary btn-icon" onclick="abrirEscaner('vender')">📷</button></div>
+        <button class="btn btn-accent" style="width:100%;" onclick="agregarAlCarrito()">Agregar</button>
+      </div>
+      <div class="card">
+        <div class="ticket-header-row">
+          <div class="card-header">🧾 Ticket</div>
           <div class="menu-container">
             <button class="menu-btn" onclick="toggleMenu()">⋮</button>
             <div class="menu-dropdown" id="menu-dropdown">
-              <div class="checkbox-row">
-                <input type="checkbox" id="modo-devolucion" onchange="toggleDevolucion()">
-                <label for="modo-devolucion">Modo devolución</label>
-              </div>
+              <div class="checkbox-row"><input type="checkbox" id="modo-devolucion" onchange="toggleDevolucion()"><label for="modo-devolucion">Modo devolución</label></div>
             </div>
           </div>
         </div>
-        <button class="btn btn-accent" style="width:100%;" onclick="agregarAlCarrito()">Agregar</button>
         <div class="devolution-options" id="devolucion-options" style="display:none;">
-          <select id="motivo-devolucion" style="width:100%;margin-top:6px;">
-            <option value="Cambio">Cambio</option>
-            <option value="Defecto">Defecto</option>
-            <option value="Garantía">Garantía</option>
-            <option value="Otro">Otro</option>
-          </select>
+          <select id="motivo-devolucion" style="width:100%;"><option value="Cambio">Cambio</option><option value="Defecto">Defecto</option><option value="Garantía">Garantía</option><option value="Otro">Otro</option></select>
         </div>
+        <div id="lista-carrito"><div class="empty-state">🛒 Vacío</div></div>
       </div>
-      <div class="card"><div class="card-header">🧾 Ticket</div><div id="lista-carrito"><div class="empty-state">🛒 Vacío</div></div></div>
       <div class="totals-bar">
         <div class="totals-items" id="total-articulos">📦 0 artículos</div>
         <div class="totals-amount" id="total-monto">$0</div>
@@ -335,7 +262,6 @@
       </div>
     </div>
     
-    <!-- HISTORIAL -->
     <div id="vista-historial" class="view">
       <div class="card" style="text-align:center;"><div style="font-size:2rem;">📋</div><div class="card-header">Historial</div>
         <button class="btn btn-outline" style="width:100%;" onclick="verVentas('TEC')">🏛️ Ventas TEC</button>
@@ -361,7 +287,6 @@
     <div class="modal-icon">💳</div>
     <div class="modal-title" id="modal-titulo">Confirmar cobro</div>
     <div class="modal-subtitle" id="modal-monto">Total: $0</div>
-    <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;">Tipo de pago:</div>
     <div class="payment-options" id="payment-options">
       <div class="payment-btn selected" onclick="seleccionarPago(this,'Efectivo')">💵 Efectivo</div>
       <div class="payment-btn" onclick="seleccionarPago(this,'Tarjeta')">💳 Tarjeta</div>
@@ -381,7 +306,7 @@ let codigoEdicion = '';
 let usuarioActual = '';
 let tipoPagoSeleccionado = 'Efectivo';
 let modoDevolucion = false;
-let accionPrincipal = 'cobrar'; // 'cobrar' o 'devolver'
+let accionPrincipal = 'cobrar';
 
 window.onload = function() {
   usuarioActual = localStorage.getItem('store_usuario') || '';
@@ -404,11 +329,7 @@ function mostrarApp() {
 }
 
 function requiereUsuario() { if(!usuarioActual){ mostrarToast('⚠️ Selecciona un usuario'); return false; } return true; }
-function mostrarToast(m) {
-  let t = document.getElementById('toast');
-  t.textContent = m; t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', 2200);
-}
+function mostrarToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2200); }
 
 function cambiarVista(v) {
   document.querySelectorAll('#vista-app .view').forEach(x => x.classList.remove('active'));
@@ -420,32 +341,17 @@ function cambiarVista(v) {
   if (v === 'historial') cargarArchivos();
 }
 
-// ─── MENÚ ⋮ ───
-function toggleMenu() {
-  document.getElementById('menu-dropdown').classList.toggle('show');
-}
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.menu-container')) {
-    document.getElementById('menu-dropdown').classList.remove('show');
-  }
-});
+function toggleMenu() { document.getElementById('menu-dropdown').classList.toggle('show'); }
+document.addEventListener('click', function(e) { if (!e.target.closest('.menu-container')) document.getElementById('menu-dropdown').classList.remove('show'); });
 
 function toggleDevolucion() {
   modoDevolucion = document.getElementById('modo-devolucion').checked;
   document.getElementById('devolucion-options').style.display = modoDevolucion ? 'block' : 'none';
   let btn = document.getElementById('btn-accion-principal');
-  if (modoDevolucion) {
-    btn.textContent = '🔄 Devolver';
-    btn.onclick = devolver;
-    accionPrincipal = 'devolver';
-  } else {
-    btn.textContent = '💳 Cobrar';
-    btn.onclick = cobrar;
-    accionPrincipal = 'cobrar';
-  }
+  if (modoDevolucion) { btn.textContent = '🔄 Devolver'; btn.onclick = devolver; accionPrincipal = 'devolver'; }
+  else { btn.textContent = '💳 Cobrar'; btn.onclick = cobrar; accionPrincipal = 'cobrar'; }
 }
 
-// ─── PRODUCTOS ───
 function cargarProductos() {
   fetch(URL_API).then(r => r.json()).then(d => { productos = d; renderizarProductos(d); actualizarBadge(d); })
     .catch(() => document.getElementById('lista-productos').innerHTML = '<p style="color:#D64545">Error</p>');
@@ -464,12 +370,16 @@ function renderizarProductos(arr) {
   let ordenados = [...arr].sort((a, b) => Number(a.stock) <= 1 ? -1 : 1);
   c.innerHTML = ordenados.map(p => {
     let stock = Number(p.stock), precio = Number(p.precio);
-    let sc = stock <= 1 ? 'stock-critical' : (stock <= 5 ? 'stock-low' : 'stock-normal');
-    let sm = stock <= 1 ? '⚠️' : '';
+    let dotClass = stock <= 1 ? 'critical' : (stock <= 5 ? 'low' : 'normal');
+    let stockText = stock <= 1 ? '⚠️ ' + stock : stock;
     return `<div class="product-item${stock <= 1 ? ' critical' : ''}">
       <div class="product-main">
-        <div class="product-top"><span class="product-id">${p.id}</span><span class="product-name">${p.descripcion}</span><span class="product-cat">${p.categoria||'TEC'}</span></div>
-        <div class="product-bottom"><span class="product-stock ${sc}">${sm} ${stock} pzas</span></div>
+        <div class="product-id">${p.id}</div>
+        <div class="product-name">${p.descripcion}</div>
+        <div class="product-meta">
+          <span class="product-cat">${p.categoria||'TEC'}</span>
+          <span class="product-stock"><span class="stock-dot ${dotClass}"></span>${stockText} pzas</span>
+        </div>
       </div>
       <div class="product-price">$${precio.toFixed(2)}</div></div>`;
   }).join('');
@@ -508,11 +418,7 @@ document.getElementById('busqueda-producto').addEventListener('input', function(
   }
 });
 
-function habilitarPrecio() {
-  document.getElementById('edit-precio').disabled = false;
-  document.getElementById('edit-precio').focus();
-  document.getElementById('btn-guardar-precio').style.display = 'inline-flex';
-}
+function habilitarPrecio() { document.getElementById('edit-precio').disabled = false; document.getElementById('edit-precio').focus(); document.getElementById('btn-guardar-precio').style.display = 'inline-flex'; }
 
 function guardarPrecio() {
   let precio = parseFloat(document.getElementById('edit-precio').value) || 0;
@@ -535,7 +441,6 @@ function sumarStock() {
 
 function cancelarEdicion() { document.getElementById('card-edicion').style.display = 'none'; document.getElementById('busqueda-producto').value = ''; renderizarProductos(productos); }
 
-// ─── ESCÁNER ───
 function abrirEscaner(ctx) {
   document.getElementById('scanner-modal').style.display = 'flex';
   scanner = new Html5Qrcode("scanner-viewport");
@@ -547,7 +452,6 @@ function abrirEscaner(ctx) {
 }
 function cerrarEscaner() { scanner&&scanner.stop().then(()=>document.getElementById('scanner-modal').style.display='none'); }
 
-// ─── CARRITO ───
 function agregarAlCarrito() {
   let cod = document.getElementById('input-codigo-vender').value.trim();
   if(!cod) return mostrarToast('Código requerido');
@@ -619,7 +523,6 @@ function renderizarCarrito() {
   document.getElementById('total-monto').textContent = `$${Math.abs(tm).toFixed(2)}`;
 }
 
-// ─── COBRO / DEVOLUCIÓN ───
 function seleccionarPago(el, tipo) {
   document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
@@ -669,13 +572,10 @@ function ejecutarAccionPrincipal() {
     let motivo = document.getElementById('motivo-devolucion').value;
     fetch(URL_API, { method: 'POST', body: JSON.stringify({ accion: 'devolver', vendedor: usuarioActual, motivo, datos: carrito }) })
       .then(() => { mostrarToast('✅ Devolución registrada'); carrito = []; renderizarCarrito(); cargarProductos();
-        document.getElementById('modo-devolucion').checked = false;
-        toggleDevolucion();
-      });
+        document.getElementById('modo-devolucion').checked = false; toggleDevolucion(); });
   }
 }
 
-// ─── HISTORIAL ───
 function cargarArchivos(){ fetch(URL_API+'?obtener=archivos').then(r=>r.json()).then(d=>{ document.getElementById('lista-archivos').innerHTML=d.length?d.map(a=>`<div>📁 ${a}</div>`).join(''):'<p>Sin archivos</p>'; }); }
 function verVentas(cat){ fetch(URL_API+'?obtener=ventas_'+cat).then(r=>r.json()).then(d=>{ document.getElementById('card-ventas').style.display='block'; document.getElementById('titulo-ventas').textContent='📊 '+ (cat==='TEC'?'Tec de Monterrey':'Tec Milenio'); document.getElementById('tabla-ventas').innerHTML=d.length?`<table style="width:100%;font-size:0.7rem;">${d.map(t=>`<tr style="border-bottom:1px solid #eee;"><td>${t.fecha}</td><td>${t.producto}</td><td>${t.cantidad}</td><td>$${t.total}</td><td style="font-size:0.65rem;color:#666;">${t.vendedor||''}</td><td style="font-size:0.6rem;color:#999;">${t.tipoPago||''}</td></tr>`).join('')}</table>`:'<p style="color:#999">Sin ventas</p>'; }); }
 function descargarActual(){ fetch(URL_API,{method:'POST',body:JSON.stringify({accion:'descargar_actual'})}).then(r=>r.json()).then(d=>window.open(d.url,'_blank')); }
