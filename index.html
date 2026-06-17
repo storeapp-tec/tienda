@@ -84,8 +84,7 @@
     .btn-accent { background: var(--accent); color: white; }
     .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
     .btn-icon { width: 36px; height: 36px; padding: 0; border-radius: 10px; font-size: 1rem; flex-shrink: 0; }
-    .btn-sm { padding: 3px 8px; font-size: 0.68rem; border-radius: 6px; }
-    .btn-xs { padding: 2px 6px; font-size: 0.65rem; border-radius: 5px; }
+    .btn-sm { padding: 5px 10px; font-size: 0.7rem; border-radius: 6px; }
     
     .product-item {
       display: flex; align-items: center; justify-content: space-between;
@@ -178,8 +177,9 @@
     
     .stock-label { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px; }
     .stock-value { font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
-    .price-row, .stock-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-    .price-row input, .stock-row input { flex: 1; }
+    .form-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .form-row input { flex: 1; }
+    .form-row label { font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap; min-width: 55px; }
     
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center; }
     .modal-box { background: var(--surface); border-radius: 20px; padding: 20px; width: 90%; max-width: 340px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.25); animation: modalIn 0.25s ease; }
@@ -224,15 +224,28 @@
     <!-- PRODUCTOS -->
     <div id="vista-productos" class="view active">
       <div class="card"><div class="input-row"><input type="text" id="busqueda-producto" placeholder="Escanea o código..."><button class="btn btn-primary btn-icon" onclick="abrirEscaner('productos')">📷</button></div></div>
-      <div class="card" id="card-edicion" style="display:none;">
-        <div class="card-header" id="titulo-edicion">Producto</div>
-        <div style="margin-bottom:6px;"><label style="font-size:0.72rem;color:var(--text-secondary);">ID / Descripción</label><input type="text" id="edit-id-desc" disabled style="width:100%;"></div>
-        <div class="price-row"><label style="font-size:0.72rem;color:var(--text-secondary);">Precio:</label><input type="number" id="edit-precio" disabled><button class="btn btn-xs btn-outline" onclick="habilitarPrecio()">✏️</button><button class="btn btn-xs btn-accent" onclick="guardarPrecio()" id="btn-guardar-precio" style="display:none;">💾</button></div>
-        <div style="margin-bottom:6px;"><label style="font-size:0.72rem;color:var(--text-secondary);">Categoría:</label><select id="edit-categoria"><option value="TEC">🏛️ TEC</option><option value="MILENIO">🎓 MILENIO</option></select></div>
-        <div class="stock-label">📦 Inventario actual: <span id="stock-actual" class="stock-value">0 pzas</span></div>
-        <div class="stock-row"><input type="number" id="edit-stock" placeholder="Cantidad a agregar"><button class="btn btn-xs btn-accent" onclick="sumarStock()">➕</button></div>
+      
+      <div class="card" id="card-edicion-existente" style="display:none;">
+        <div class="card-header" id="titulo-edicion-existente">Producto</div>
+        <div style="margin-bottom:6px;"><label style="font-size:0.72rem;color:var(--text-secondary);">ID / Descripción</label><input type="text" id="edit-id-desc-existente" disabled style="width:100%;"></div>
+        <div class="stock-label">📦 Inventario actual: <span id="stock-actual-existente" class="stock-value">0 pzas</span></div>
+        <div class="form-row"><label>Precio:</label><input type="number" id="edit-precio-existente" disabled><button class="btn btn-sm btn-accent" onclick="habilitarPrecio()">✏️ Actualizar</button></div>
+        <div class="form-row"><label>Stock:</label><input type="number" id="edit-stock-existente" placeholder="Cantidad a agregar"><button class="btn btn-sm btn-accent" onclick="sumarStock()">➕ Sumar</button></div>
+        <div style="margin-bottom:6px;"><label style="font-size:0.72rem;color:var(--text-secondary);">Categoría:</label><select id="edit-categoria-existente"><option value="TEC">🏛️ TEC</option><option value="MILENIO">🎓 MILENIO</option></select></div>
         <button class="btn btn-outline" style="width:100%;margin-top:4px;font-size:0.7rem;" onclick="cancelarEdicion()">Cerrar</button>
       </div>
+      
+      <div class="card" id="card-nuevo-producto" style="display:none;">
+        <div class="card-header">🆕 Nuevo producto</div>
+        <div class="form-row"><label>ID:</label><input type="text" id="nuevo-id" placeholder="Código (opcional)"></div>
+        <div class="form-row"><label>Descripción:</label><input type="text" id="nuevo-descripcion" placeholder="Nombre del producto"></div>
+        <div class="form-row"><label>Precio:</label><input type="number" id="nuevo-precio" placeholder="$0"></div>
+        <div class="form-row"><label>Stock:</label><input type="number" id="nuevo-stock" placeholder="Cantidad inicial"></div>
+        <div style="margin-bottom:6px;"><label style="font-size:0.72rem;color:var(--text-secondary);">Categoría:</label><select id="nuevo-categoria"><option value="TEC">🏛️ TEC</option><option value="MILENIO">🎓 MILENIO</option></select></div>
+        <button class="btn btn-accent" style="width:100%;" onclick="crearProducto()">💾 Guardar producto</button>
+        <button class="btn btn-outline" style="width:100%;margin-top:4px;font-size:0.7rem;" onclick="cancelarEdicion()">Cancelar</button>
+      </div>
+      
       <div class="card"><div class="card-header">📦 Catálogo</div><div id="lista-productos">Cargando...</div></div>
     </div>
     
@@ -301,11 +314,12 @@
 </div>
 
 <script>
-const URL_API = "https://script.google.com/macros/s/AKfycbxc8Yzf_1U5DA8Uk4Cmgo7tosM6IJ7zmXcW4tOt8TAJMtWYCKf0o8d6M0zMBG-VFHQd/exec";
+const URL_API = "URL_DE_TU_SCRIPT";
 let productos = [];
 let carrito = [];
 let scanner = null;
 let codigoEdicion = '';
+let esNuevo = false;
 let usuarioActual = '';
 let tipoPagoSeleccionado = 'Efectivo';
 let modoDevolucion = false;
@@ -388,65 +402,97 @@ function renderizarProductos(arr) {
   }).join('');
 }
 
-// Búsqueda SOLO por ID exacto
+// Búsqueda inteligente
 document.getElementById('busqueda-producto').addEventListener('input', function() {
   let txt = this.value.trim();
-  if (!txt) { renderizarProductos(productos); document.getElementById('card-edicion').style.display = 'none'; return; }
+  if (!txt) { 
+    renderizarProductos(productos); 
+    document.getElementById('card-edicion-existente').style.display = 'none';
+    document.getElementById('card-nuevo-producto').style.display = 'none';
+    return; 
+  }
   
+  let esCodigo = /^\d+$/.test(txt); // Solo números = código
   let exacto = productos.find(p => p.id === txt);
+  
   if (exacto) {
     if (!requiereUsuario()) return;
+    esNuevo = false;
     codigoEdicion = exacto.id;
-    document.getElementById('card-edicion').style.display = 'block';
-    document.getElementById('titulo-edicion').textContent = exacto.descripcion;
-    document.getElementById('edit-id-desc').value = exacto.id + ' - ' + exacto.descripcion;
-    document.getElementById('stock-actual').textContent = Number(exacto.stock) + ' pzas';
-    document.getElementById('edit-precio').value = Number(exacto.precio);
-    document.getElementById('edit-precio').disabled = true;
-    document.getElementById('btn-guardar-precio').style.display = 'none';
-    document.getElementById('edit-categoria').value = exacto.categoria || 'TEC';
-    document.getElementById('edit-stock').value = '';
+    document.getElementById('card-nuevo-producto').style.display = 'none';
+    document.getElementById('card-edicion-existente').style.display = 'block';
+    document.getElementById('titulo-edicion-existente').textContent = exacto.descripcion;
+    document.getElementById('edit-id-desc-existente').value = exacto.id + ' - ' + exacto.descripcion;
+    document.getElementById('stock-actual-existente').textContent = Number(exacto.stock) + ' pzas';
+    document.getElementById('edit-precio-existente').value = Number(exacto.precio);
+    document.getElementById('edit-precio-existente').disabled = true;
+    document.getElementById('edit-categoria-existente').value = exacto.categoria || 'TEC';
+    document.getElementById('edit-stock-existente').value = '';
     renderizarProductos([exacto]);
-  } else if (txt.length >= 3) {
-    // Mostrar producto nuevo si no existe
-    codigoEdicion = txt;
-    document.getElementById('card-edicion').style.display = 'block';
-    document.getElementById('titulo-edicion').textContent = 'Nuevo producto';
-    document.getElementById('edit-id-desc').value = txt + ' - (nuevo)';
-    document.getElementById('stock-actual').textContent = '0 pzas';
-    document.getElementById('edit-precio').value = '';
-    document.getElementById('edit-precio').disabled = false;
-    document.getElementById('btn-guardar-precio').style.display = 'inline-flex';
-    document.getElementById('edit-categoria').value = 'TEC';
-    document.getElementById('edit-stock').value = '';
+  } else if (txt.length >= 2) {
+    if (!requiereUsuario()) return;
+    esNuevo = true;
+    document.getElementById('card-edicion-existente').style.display = 'none';
+    document.getElementById('card-nuevo-producto').style.display = 'block';
+    if (esCodigo) {
+      document.getElementById('nuevo-id').value = txt;
+      document.getElementById('nuevo-descripcion').value = '';
+    } else {
+      document.getElementById('nuevo-id').value = '';
+      document.getElementById('nuevo-descripcion').value = txt;
+    }
+    document.getElementById('nuevo-precio').value = '';
+    document.getElementById('nuevo-stock').value = '';
+    document.getElementById('nuevo-categoria').value = 'TEC';
+    codigoEdicion = esCodigo ? txt : '';
     renderizarProductos([]);
   } else {
     renderizarProductos([]);
   }
 });
 
-function habilitarPrecio() { document.getElementById('edit-precio').disabled = false; document.getElementById('edit-precio').focus(); document.getElementById('btn-guardar-precio').style.display = 'inline-flex'; }
+function habilitarPrecio() { document.getElementById('edit-precio-existente').disabled = false; document.getElementById('edit-precio-existente').focus(); }
 
 function guardarPrecio() {
-  let precio = parseFloat(document.getElementById('edit-precio').value) || 0;
+  let precio = parseFloat(document.getElementById('edit-precio-existente').value) || 0;
   if (precio <= 0) return mostrarToast('Precio inválido');
   fetch(URL_API, { method: 'POST', body: JSON.stringify({ accion: 'guardar_producto', registradoPor: usuarioActual, datos: { id: codigoEdicion, precio, soloPrecio: true } }) })
-    .then(() => { mostrarToast('✅ Precio actualizado'); document.getElementById('edit-precio').disabled = true; document.getElementById('btn-guardar-precio').style.display = 'none'; cargarProductos(); });
+    .then(() => { mostrarToast('✅ Precio actualizado'); document.getElementById('edit-precio-existente').disabled = true; cargarProductos(); });
 }
 
 function sumarStock() {
-  let stock = parseInt(document.getElementById('edit-stock').value) || 0;
+  let stock = parseInt(document.getElementById('edit-stock-existente').value) || 0;
   if (stock <= 0) return mostrarToast('Cantidad inválida');
   let existente = productos.find(p => p.id === codigoEdicion);
   let stockFinal = existente ? Number(existente.stock) + stock : stock;
-  let desc = document.getElementById('titulo-edicion').textContent;
-  let precio = parseFloat(document.getElementById('edit-precio').value) || 0;
-  let cat = document.getElementById('edit-categoria').value;
+  let desc = document.getElementById('titulo-edicion-existente').textContent;
+  let precio = parseFloat(document.getElementById('edit-precio-existente').value) || 0;
+  let cat = document.getElementById('edit-categoria-existente').value;
   fetch(URL_API, { method: 'POST', body: JSON.stringify({ accion: 'guardar_producto', registradoPor: usuarioActual, datos: { id: codigoEdicion, descripcion: desc, precio, stock: stockFinal, categoria: cat, stockMinimo: 5 } }) })
-    .then(() => { mostrarToast('✅ Stock actualizado'); document.getElementById('stock-actual').textContent = stockFinal + ' pzas'; document.getElementById('edit-stock').value = ''; cargarProductos(); });
+    .then(() => { mostrarToast('✅ Stock actualizado'); document.getElementById('stock-actual-existente').textContent = stockFinal + ' pzas'; document.getElementById('edit-stock-existente').value = ''; cargarProductos(); });
 }
 
-function cancelarEdicion() { document.getElementById('card-edicion').style.display = 'none'; document.getElementById('busqueda-producto').value = ''; renderizarProductos(productos); }
+function crearProducto() {
+  let id = document.getElementById('nuevo-id').value.trim();
+  let desc = document.getElementById('nuevo-descripcion').value.trim();
+  let precio = parseFloat(document.getElementById('nuevo-precio').value) || 0;
+  let stock = parseInt(document.getElementById('nuevo-stock').value) || 0;
+  let cat = document.getElementById('nuevo-categoria').value;
+  
+  if (!desc || precio <= 0 || stock <= 0) return mostrarToast('Completa descripción, precio y stock');
+  if (!id) id = 'ID' + Date.now().toString().slice(-6);
+  if (productos.find(p => p.id === id)) return mostrarToast('❌ El ID ya existe');
+  
+  fetch(URL_API, { method: 'POST', body: JSON.stringify({ accion: 'guardar_producto', registradoPor: usuarioActual, datos: { id, descripcion: desc, precio, stock, categoria: cat, stockMinimo: 5 } }) })
+    .then(() => { mostrarToast('✅ Producto creado'); cancelarEdicion(); cargarProductos(); });
+}
+
+function cancelarEdicion() {
+  document.getElementById('card-edicion-existente').style.display = 'none';
+  document.getElementById('card-nuevo-producto').style.display = 'none';
+  document.getElementById('busqueda-producto').value = '';
+  renderizarProductos(productos);
+}
 
 function abrirEscaner(ctx) {
   document.getElementById('scanner-modal').style.display = 'flex';
