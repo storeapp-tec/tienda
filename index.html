@@ -221,8 +221,9 @@
 
   <div class="main-content">
     
+    <!-- PRODUCTOS -->
     <div id="vista-productos" class="view active">
-      <div class="card"><div class="input-row"><input type="text" id="busqueda-producto" placeholder="Código o nombre..."><button class="btn btn-primary btn-icon" onclick="abrirEscaner('productos')">📷</button></div></div>
+      <div class="card"><div class="input-row"><input type="text" id="busqueda-producto" placeholder="Escanea o código..."><button class="btn btn-primary btn-icon" onclick="abrirEscaner('productos')">📷</button></div></div>
       <div class="card" id="card-edicion" style="display:none;">
         <div class="card-header" id="titulo-edicion">Producto</div>
         <div style="margin-bottom:6px;"><label style="font-size:0.72rem;color:var(--text-secondary);">ID / Descripción</label><input type="text" id="edit-id-desc" disabled style="width:100%;"></div>
@@ -235,6 +236,7 @@
       <div class="card"><div class="card-header">📦 Catálogo</div><div id="lista-productos">Cargando...</div></div>
     </div>
     
+    <!-- VENDER -->
     <div id="vista-vender" class="view">
       <div class="card">
         <div class="input-row"><input type="text" id="input-codigo-vender" placeholder="Escanea o código..."><button class="btn btn-primary btn-icon" onclick="abrirEscaner('vender')">📷</button></div>
@@ -262,6 +264,7 @@
       </div>
     </div>
     
+    <!-- HISTORIAL -->
     <div id="vista-historial" class="view">
       <div class="card" style="text-align:center;"><div style="font-size:2rem;">📋</div><div class="card-header">Historial</div>
         <button class="btn btn-outline" style="width:100%;" onclick="verVentas('TEC')">🏛️ Ventas TEC</button>
@@ -298,7 +301,7 @@
 </div>
 
 <script>
-const URL_API = "https://script.google.com/macros/s/AKfycbxc8Yzf_1U5DA8Uk4Cmgo7tosM6IJ7zmXcW4tOt8TAJMtWYCKf0o8d6M0zMBG-VFHQd/exec";
+const URL_API = "URL_DE_TU_SCRIPT";
 let productos = [];
 let carrito = [];
 let scanner = null;
@@ -385,11 +388,11 @@ function renderizarProductos(arr) {
   }).join('');
 }
 
+// Búsqueda SOLO por ID exacto
 document.getElementById('busqueda-producto').addEventListener('input', function() {
   let txt = this.value.trim();
   if (!txt) { renderizarProductos(productos); document.getElementById('card-edicion').style.display = 'none'; return; }
-  let filtrados = productos.filter(p => p.id.includes(txt) || p.descripcion.toLowerCase().includes(txt));
-  renderizarProductos(filtrados);
+  
   let exacto = productos.find(p => p.id === txt);
   if (exacto) {
     if (!requiereUsuario()) return;
@@ -403,8 +406,9 @@ document.getElementById('busqueda-producto').addEventListener('input', function(
     document.getElementById('btn-guardar-precio').style.display = 'none';
     document.getElementById('edit-categoria').value = exacto.categoria || 'TEC';
     document.getElementById('edit-stock').value = '';
-  } else if (txt.length >= 8) {
-    if (!requiereUsuario()) return;
+    renderizarProductos([exacto]);
+  } else if (txt.length >= 3) {
+    // Mostrar producto nuevo si no existe
     codigoEdicion = txt;
     document.getElementById('card-edicion').style.display = 'block';
     document.getElementById('titulo-edicion').textContent = 'Nuevo producto';
@@ -415,6 +419,9 @@ document.getElementById('busqueda-producto').addEventListener('input', function(
     document.getElementById('btn-guardar-precio').style.display = 'inline-flex';
     document.getElementById('edit-categoria').value = 'TEC';
     document.getElementById('edit-stock').value = '';
+    renderizarProductos([]);
+  } else {
+    renderizarProductos([]);
   }
 });
 
@@ -456,7 +463,10 @@ function agregarAlCarrito() {
   let cod = document.getElementById('input-codigo-vender').value.trim();
   if(!cod) return mostrarToast('Código requerido');
   let p = productos.find(x=>x.id===cod);
-  let nombre = p?p.descripcion:'?', precio = p?Number(p.precio):0, cat = p?p.categoria:'TEC';
+  if(!p) return mostrarToast('❌ Producto no encontrado');
+  
+  let nombre = p.descripcion, precio = Number(p.precio), cat = p.categoria || 'TEC';
+  
   if (modoDevolucion) {
     let existe = carrito.find(x=>x.id===cod && x.devolucion);
     if(existe) existe.cantidad++;
@@ -464,7 +474,7 @@ function agregarAlCarrito() {
   } else {
     let existe = carrito.find(x=>x.id===cod && !x.devolucion);
     if(existe) {
-      let stockDisp = p?Number(p.stock):0;
+      let stockDisp = Number(p.stock);
       if(existe.cantidad >= stockDisp) return mostrarToast(stockDisp<=1?'⚠️ ¡Última pieza!':'⚠️ Stock máximo: '+stockDisp);
       existe.cantidad++;
     } else carrito.push({id:cod,descripcion:nombre,cantidad:1,precio,categoria:cat,devolucion:false});
