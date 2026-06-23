@@ -229,9 +229,10 @@
         <div class="card-header" id="titulo-edicion-existente">Producto</div>
         <div style="margin-bottom:6px;"><label style="font-size:0.72rem;color:var(--text-secondary);">ID / Descripción</label><input type="text" id="edit-id-desc-existente" disabled style="width:100%;"></div>
         <div class="stock-label">📦 Inventario actual: <span id="stock-actual-existente" class="stock-value">0 pzas</span></div>
-        <div class="form-row"><label>Precio:</label><input type="number" id="edit-precio-existente" disabled><button class="btn btn-sm btn-accent" onclick="habilitarPrecio()">✏️ Actualizar</button></div>
-        <div class="form-row"><label>Stock:</label><input type="number" id="edit-stock-existente" placeholder="Cantidad a agregar"><button class="btn btn-sm btn-accent" onclick="sumarStock()">➕ Sumar</button></div>
+        <div class="form-row"><label>Precio:</label><input type="number" id="edit-precio-existente" disabled><button class="btn btn-sm btn-outline" onclick="habilitarPrecio()">✏️</button></div>
+        <div class="form-row"><label>Stock:</label><input type="number" id="edit-stock-existente" placeholder="Cantidad a agregar"></div>
         <div style="margin-bottom:6px;"><label style="font-size:0.72rem;color:var(--text-secondary);">Categoría:</label><select id="edit-categoria-existente"><option value="TEC">🏛️ TEC</option><option value="MILENIO">🎓 MILENIO</option></select></div>
+        <button class="btn btn-accent" style="width:100%;" onclick="guardarCambios()">💾 Guardar cambios</button>
         <button class="btn btn-outline" style="width:100%;margin-top:4px;font-size:0.7rem;" onclick="cancelarEdicion()">Cerrar</button>
       </div>
       
@@ -307,19 +308,18 @@
       <div class="payment-btn selected" onclick="seleccionarPago(this,'Efectivo')">💵 Efectivo</div>
       <div class="payment-btn" onclick="seleccionarPago(this,'Tarjeta')">💳 Tarjeta</div>
       <div class="payment-btn" onclick="seleccionarPago(this,'CECO')">🏷️ CECO</div>
-      <div class="payment-btn" onclick="seleccionarPago(this,'Empleado')">🎂 Emp. (-20%)</div>
+      <div class="payment-btn" onclick="seleccionarPago(this,'Empleado')">🎂 Emp. (-10%)</div>
     </div>
     <div class="modal-buttons"><button class="btn btn-outline" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" id="btn-confirmar-modal" onclick="ejecutarAccionPrincipal()">Cobrar</button></div>
   </div>
 </div>
 
 <script>
-const URL_API = "https://script.google.com/macros/s/AKfycbxc8Yzf_1U5DA8Uk4Cmgo7tosM6IJ7zmXcW4tOt8TAJMtWYCKf0o8d6M0zMBG-VFHQd/exec";
+const URL_API = "https://script.google.com/macros/s/AKfycbzcswhrxpMlvcgrdI82KWERxkAcJhIPajAZ7jzUixb8zif7_kofbSyrePVf9XuvmG-d0A/exec";
 let productos = [];
 let carrito = [];
 let scanner = null;
 let codigoEdicion = '';
-let esNuevo = false;
 let usuarioActual = '';
 let tipoPagoSeleccionado = 'Efectivo';
 let modoDevolucion = false;
@@ -402,7 +402,6 @@ function renderizarProductos(arr) {
   }).join('');
 }
 
-// Búsqueda inteligente
 document.getElementById('busqueda-producto').addEventListener('input', function() {
   let txt = this.value.trim();
   if (!txt) { 
@@ -412,12 +411,11 @@ document.getElementById('busqueda-producto').addEventListener('input', function(
     return; 
   }
   
-  let esCodigo = /^\d+$/.test(txt); // Solo números = código
+  let esCodigo = /^\d+$/.test(txt);
   let exacto = productos.find(p => p.id === txt);
   
   if (exacto) {
     if (!requiereUsuario()) return;
-    esNuevo = false;
     codigoEdicion = exacto.id;
     document.getElementById('card-nuevo-producto').style.display = 'none';
     document.getElementById('card-edicion-existente').style.display = 'block';
@@ -431,7 +429,6 @@ document.getElementById('busqueda-producto').addEventListener('input', function(
     renderizarProductos([exacto]);
   } else if (txt.length >= 2) {
     if (!requiereUsuario()) return;
-    esNuevo = true;
     document.getElementById('card-edicion-existente').style.display = 'none';
     document.getElementById('card-nuevo-producto').style.display = 'block';
     if (esCodigo) {
@@ -446,30 +443,39 @@ document.getElementById('busqueda-producto').addEventListener('input', function(
     document.getElementById('nuevo-categoria').value = 'TEC';
     codigoEdicion = esCodigo ? txt : '';
     renderizarProductos([]);
-  } else {
-    renderizarProductos([]);
   }
 });
 
 function habilitarPrecio() { document.getElementById('edit-precio-existente').disabled = false; document.getElementById('edit-precio-existente').focus(); }
 
-function guardarPrecio() {
+function guardarCambios() {
   let precio = parseFloat(document.getElementById('edit-precio-existente').value) || 0;
-  if (precio <= 0) return mostrarToast('Precio inválido');
-  fetch(URL_API, { method: 'POST', body: JSON.stringify({ accion: 'guardar_producto', registradoPor: usuarioActual, datos: { id: codigoEdicion, precio, soloPrecio: true } }) })
-    .then(() => { mostrarToast('✅ Precio actualizado'); document.getElementById('edit-precio-existente').disabled = true; cargarProductos(); });
-}
-
-function sumarStock() {
   let stock = parseInt(document.getElementById('edit-stock-existente').value) || 0;
-  if (stock <= 0) return mostrarToast('Cantidad inválida');
-  let existente = productos.find(p => p.id === codigoEdicion);
-  let stockFinal = existente ? Number(existente.stock) + stock : stock;
-  let desc = document.getElementById('titulo-edicion-existente').textContent;
-  let precio = parseFloat(document.getElementById('edit-precio-existente').value) || 0;
   let cat = document.getElementById('edit-categoria-existente').value;
-  fetch(URL_API, { method: 'POST', body: JSON.stringify({ accion: 'guardar_producto', registradoPor: usuarioActual, datos: { id: codigoEdicion, descripcion: desc, precio, stock: stockFinal, categoria: cat, stockMinimo: 5 } }) })
-    .then(() => { mostrarToast('✅ Stock actualizado'); document.getElementById('stock-actual-existente').textContent = stockFinal + ' pzas'; document.getElementById('edit-stock-existente').value = ''; cargarProductos(); });
+  let existente = productos.find(p => p.id === codigoEdicion);
+  let desc = document.getElementById('titulo-edicion-existente').textContent;
+  
+  let precioCambio = (precio !== Number(existente.precio));
+  let stockCambio = (stock > 0);
+  
+  if (!precioCambio && !stockCambio) return mostrarToast('No hay cambios que guardar');
+  
+  let stockFinal = stockCambio ? Number(existente.stock) + stock : Number(existente.stock);
+  
+  fetch(URL_API, { method: 'POST', body: JSON.stringify({ 
+    accion: 'guardar_producto', registradoPor: usuarioActual, 
+    datos: { id: codigoEdicion, descripcion: desc, precio, stock: stockFinal, categoria: cat, stockMinimo: 5 } 
+  })})
+  .then(() => {
+    if (precioCambio && stockCambio) mostrarToast('✅ Precio e inventario actualizados');
+    else if (precioCambio) mostrarToast('✅ Precio actualizado');
+    else mostrarToast('✅ Inventario actualizado');
+    
+    document.getElementById('edit-precio-existente').disabled = true;
+    document.getElementById('edit-stock-existente').value = '';
+    document.getElementById('stock-actual-existente').textContent = stockFinal + ' pzas';
+    cargarProductos();
+  });
 }
 
 function crearProducto() {
@@ -589,9 +595,9 @@ function cobrar() {
   if(!carrito.length) return mostrarToast('Vacío');
   if(!requiereUsuario()) return;
   let total = document.getElementById('total-monto').textContent.replace('$','');
-  if (tipoPagoSeleccionado === 'Empleado') total = (parseFloat(total) * 0.8).toFixed(2);
+  if (tipoPagoSeleccionado === 'Empleado') total = (parseFloat(total) * 0.9).toFixed(2);
   document.getElementById('modal-titulo').textContent = 'Confirmar cobro';
-  document.getElementById('modal-monto').textContent = 'Total: $' + total + (tipoPagoSeleccionado === 'Empleado' ? ' (-20%)' : '');
+  document.getElementById('modal-monto').textContent = 'Total: $' + total + (tipoPagoSeleccionado === 'Empleado' ? ' (-10%)' : '');
   document.getElementById('btn-confirmar-modal').textContent = 'Cobrar';
   document.getElementById('payment-options').style.display = 'flex';
   accionPrincipal = 'cobrar';
@@ -616,7 +622,7 @@ function ejecutarAccionPrincipal() {
   cerrarModal();
   if (accionPrincipal === 'cobrar') {
     let carritoCobro = carrito.filter(x => !x.devolucion).map(item => {
-      let precio = tipoPagoSeleccionado === 'Empleado' ? Number(item.precio) * 0.8 : Number(item.precio);
+      let precio = tipoPagoSeleccionado === 'Empleado' ? Number(item.precio) * 0.9 : Number(item.precio);
       return {...item, precio};
     });
     let devoluciones = carrito.filter(x => x.devolucion);
