@@ -3,13 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Store - Prueba Captura</title>
+  <title>Store - Prueba Barcode API</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon-512.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/tienda/sw.js');
@@ -85,14 +83,14 @@
 <div class="header">
   <div class="header-left">
     <div class="header-logo-box"><img src="icon.svg" alt="Store" class="header-logo"></div>
-    <span class="header-title">Store - Prueba Captura</span>
+    <span class="header-title">Store - Barcode API</span>
   </div>
 </div>
 
 <div class="main-content">
   <div class="card">
-    <div class="card-header">🧪 Prueba: Escáner + Captura + OCR</div>
-    <p style="margin-bottom:10px;color:var(--text-secondary);">Escanea normal. Si falla, captura y analiza.</p>
+    <div class="card-header">🧪 Prueba: Escáner + Barcode Detection API</div>
+    <p style="margin-bottom:10px;color:var(--text-secondary);">Escanea normal. Si falla, captura y detecta con API nativa.</p>
     <button class="btn btn-primary" onclick="abrirEscaner()">📷 Abrir Escáner</button>
     
     <div class="result-box" id="resultado" style="display:none;"></div>
@@ -106,8 +104,8 @@
 
 <div id="scanner-modal">
   <div id="scanner-viewport"></div>
-  <div id="capture-status">🔍 Analizando imagen...</div>
-  <button id="btn-capture" onclick="capturarYAnalizar()">📸 Capturar y analizar</button>
+  <div id="capture-status"></div>
+  <button id="btn-capture" onclick="capturarYDetectar()">📸 Capturar y detectar</button>
   <button id="close-scanner" onclick="cerrarEscaner()">✕ Cerrar</button>
 </div>
 <div class="toast" id="toast"></div>
@@ -115,6 +113,11 @@
 <script>
 let scanner = null;
 let captureTimeout = null;
+
+// Verificar soporte
+if (!('BarcodeDetector' in window)) {
+  log('⚠️ BarcodeDetector no soportado. Usa Chrome 83+');
+}
 
 function mostrarToast(m) { 
   let t = document.getElementById('toast'); 
@@ -155,7 +158,7 @@ function abrirEscaner() {
   
   captureTimeout = setTimeout(() => {
     document.getElementById('btn-capture').style.display = 'block';
-    log('💡 ¿No lee? Captura y analiza');
+    log('💡 ¿No lee? Captura y detecta');
   }, 4000);
 }
 
@@ -172,119 +175,75 @@ function cerrarEscaner() {
   }
 }
 
-async function capturarYAnalizar() {
+async function capturarYDetectar() {
   document.getElementById('btn-capture').style.display = 'none';
   document.getElementById('capture-status').style.display = 'block';
   document.getElementById('capture-status').textContent = '📸 Capturando...';
-  log('📸 Iniciando captura y análisis...');
+  log('📸 Capturando imagen...');
   
   try {
     let viewport = document.getElementById('scanner-viewport');
     let video = viewport.querySelector('video');
     
     if (!video) {
-      log('❌ No se encontró el video');
-      document.getElementById('capture-status').style.display = 'none';
-      document.getElementById('btn-capture').style.display = 'block';
+      log('❌ No se encontró video');
+      resetearBoton();
       return;
     }
     
-    // Crear canvas con la imagen
+    // Crear canvas
     let canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     let ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
     
-    log('📸 Imagen capturada: ' + canvas.width + 'x' + canvas.height);
+    log('📸 Imagen: ' + canvas.width + 'x' + canvas.height);
     
-    // Intentar con QuaggaJS (mejor para códigos 1D)
-    document.getElementById('capture-status').textContent = '🔍 Quagga analizando...';
-    
-    let resultado = await analizarConQuagga(canvas);
-    
-    if (resultado) {
-      document.getElementById('resultado').textContent = '✅ Quagga: ' + resultado;
-      document.getElementById('resultado').style.display = 'block';
-      log('✅ Quagga detectó: ' + resultado);
-      mostrarToast('✅ ' + resultado);
-      cerrarEscaner();
+    // Verificar soporte
+    if (!('BarcodeDetector' in window)) {
+      log('❌ BarcodeDetector no disponible. Usa Chrome.');
+      mostrarToast('❌ Usa Chrome 83+');
+      resetearBoton();
       return;
     }
     
-    log('❌ Quagga no detectó. Probando OCR...');
-    document.getElementById('capture-status').textContent = '🔢 Probando OCR...';
+    document.getElementById('capture-status').textContent = '🔍 Detectando códigos...';
     
-    // Intentar OCR en mitad inferior
-    let canvasMitad = document.createElement('canvas');
-    canvasMitad.width = canvas.width;
-    canvasMitad.height = canvas.height / 2;
-    let ctx2 = canvasMitad.getContext('2d');
-    ctx2.drawImage(canvas, 0, canvas.height/2, canvas.width, canvas.height/2, 0, 0, canvas.width, canvas.height/2);
-    
-    // Blanco y negro
-    let imageData = ctx2.getImageData(0, 0, canvasMitad.width, canvasMitad.height);
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      let avg = (imageData.data[i] + imageData.data[i+1] + imageData.data[i+2]) / 3;
-      let val = avg > 128 ? 255 : 0;
-      imageData.data[i] = val;
-      imageData.data[i+1] = val;
-      imageData.data[i+2] = val;
-    }
-    ctx2.putImageData(imageData, 0, 0);
-    
-    let result = await Tesseract.recognize(canvasMitad, 'eng', {
-      tessedit_char_whitelist: '0123456789 ',
-      tessedit_pageseg_mode: '13'
+    // Crear detector
+    const detector = new BarcodeDetector({
+      formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'codabar', 'itf']
     });
     
-    let texto = result.data.text.replace(/\s/g, '');
-    log('📝 OCR: ' + texto);
+    // Detectar
+    const startTime = performance.now();
+    const barcodes = await detector.detect(canvas);
+    const endTime = performance.now();
+    const tiempo = Math.round(endTime - startTime);
     
-    let match = texto.match(/\d{13}/);
-    if (match) {
-      document.getElementById('resultado').textContent = '✅ OCR: ' + match[0];
+    log('⏱️ Detección: ' + tiempo + 'ms');
+    
+    if (barcodes.length > 0) {
+      let codigos = barcodes.map(b => b.rawValue).join(', ');
+      document.getElementById('resultado').textContent = '✅ Detectado: ' + codigos;
       document.getElementById('resultado').style.display = 'block';
-      log('✅ OCR: ' + match[0]);
-      mostrarToast('✅ ' + match[0]);
+      log('✅ ÉXITO (' + barcodes.length + '): ' + codigos);
+      mostrarToast('✅ ' + barcodes[0].rawValue);
       cerrarEscaner();
-      return;
-    }
-    
-    let matchShort = texto.match(/\d{8,}/);
-    if (matchShort) {
-      document.getElementById('resultado').textContent = '⚠️ Posible: ' + matchShort[0];
-      document.getElementById('resultado').style.display = 'block';
-      log('⚠️ Parcial: ' + matchShort[0]);
     } else {
-      log('❌ Nada detectado');
-      mostrarToast('❌ No se detectó');
+      log('❌ No se detectó ningún código');
+      mostrarToast('❌ Sin resultados');
+      resetearBoton();
     }
   } catch(err) {
     log('❌ Error: ' + err.message);
+    resetearBoton();
   }
-  
-  document.getElementById('capture-status').style.display = 'none';
-  document.getElementById('btn-capture').style.display = 'block';
 }
 
-function analizarConQuagga(canvas) {
-  return new Promise((resolve) => {
-    Quagga.decodeSingle({
-      src: canvas.toDataURL(),
-      numOfWorkers: 2,
-      decoder: {
-        readers: ["ean_reader", "ean_8_reader", "code_128_reader", "code_39_reader", "upc_reader", "upc_e_reader", "itf_reader", "codabar_reader"]
-      },
-      locate: true
-    }, function(result) {
-      if (result && result.codeResult) {
-        resolve(result.codeResult.code);
-      } else {
-        resolve(null);
-      }
-    });
-  });
+function resetearBoton() {
+  document.getElementById('capture-status').style.display = 'none';
+  document.getElementById('btn-capture').style.display = 'block';
 }
 </script>
 </body>
