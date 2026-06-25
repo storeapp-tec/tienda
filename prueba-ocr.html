@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Store - Prueba OCR</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-512.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/tienda/sw.js');
+    }
+  </script>
+  <style>
+    :root {
+      --primary: #003D4D;
+      --accent: #1B998B;
+      --danger: #D64545;
+      --bg: #F5F7FA;
+      --surface: #FFFFFF;
+      --text: #1E1E1E;
+      --text-secondary: #666666;
+      --border: #E0E0E0;
+      --radius: 14px;
+      --shadow: 0 1px 6px rgba(0,0,0,0.05);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      font-size: 0.82rem;
+    }
+    
+    .header {
+      background: var(--surface);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .header-logo-box { width: 34px; height: 34px; border-radius: 9px; background: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .header-logo { width: 18px; height: 18px; object-fit: contain; filter: brightness(0) invert(1); }
+    .header-title { font-size: 1.05rem; font-weight: 700; color: var(--primary); }
+    .header-user { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 500; color: var(--text-secondary); }
+    
+    .main-content { flex: 1; overflow-y: auto; padding: 20px; text-align: center; }
+    .card { background: var(--surface); border-radius: var(--radius); padding: 15px; margin-bottom: 10px; box-shadow: var(--shadow); }
+    .card-header { font-size: 0.9rem; font-weight: 600; margin-bottom: 10px; }
+    
+    .btn {
+      padding: 10px 20px; border: none; border-radius: 10px;
+      font-weight: 600; font-size: 0.85rem; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      font-family: 'Inter', sans-serif; margin: 5px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+    
+    #scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+    #scanner-viewport { width: 90%; max-width: 350px; aspect-ratio: 1; border-radius: 18px; overflow: hidden; border: 3px solid var(--accent); }
+    #close-scanner { margin-top: 15px; background: none; border: none; color: white; font-size: 1.8rem; cursor: pointer; }
+    #btn-ocr { margin-top: 10px; padding: 10px 20px; background: #FF9800; color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: none; }
+    #ocr-status { color: white; font-size: 0.8rem; margin-top: 8px; display: none; }
+    
+    .result-box { background: #E8F5E9; padding: 15px; border-radius: 10px; margin-top: 15px; font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+    .log-box { background: #F5F5F5; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 0.75rem; color: #666; max-height: 150px; overflow-y: auto; text-align: left; }
+    
+    .toast { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 18px; border-radius: 10px; font-weight: 500; z-index: 10000; display: none; font-size: 0.78rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo-box"><img src="icon.svg" alt="Store" class="header-logo"></div>
+    <span class="header-title">Store - Prueba OCR</span>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="card">
+    <div class="card-header">🧪 Prueba de Escáner + OCR</div>
+    <p style="margin-bottom:10px;color:var(--text-secondary);">Escanea un código o usa OCR para leer números</p>
+    <button class="btn btn-primary" onclick="abrirEscaner()">📷 Abrir Escáner</button>
+    
+    <div class="result-box" id="resultado" style="display:none;"></div>
+    
+    <div class="log-box" id="log">
+      <strong>📋 Registro:</strong><br>
+      Esperando escaneo...
+    </div>
+  </div>
+</div>
+
+<div id="scanner-modal">
+  <div id="scanner-viewport"></div>
+  <div id="ocr-status">🔍 Leyendo números...</div>
+  <button id="btn-ocr" onclick="leerOCR()">🔢 Leer con OCR</button>
+  <button id="close-scanner" onclick="cerrarEscaner()">✕ Cerrar</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let scanner = null;
+let ocrTimeout = null;
+let videoTrack = null;
+
+function mostrarToast(m) { 
+  let t = document.getElementById('toast'); 
+  t.textContent = m; t.style.display = 'block'; 
+  setTimeout(() => t.style.display = 'none', 2500); 
+}
+
+function log(msg) {
+  let l = document.getElementById('log');
+  let hora = new Date().toLocaleTimeString();
+  l.innerHTML += `<br>[${hora}] ${msg}`;
+  l.scrollTop = l.scrollHeight;
+}
+
+function abrirEscaner() {
+  document.getElementById('scanner-modal').style.display = 'flex';
+  document.getElementById('btn-ocr').style.display = 'none';
+  document.getElementById('ocr-status').style.display = 'none';
+  document.getElementById('resultado').style.display = 'none';
+  
+  log('📷 Escáner iniciado...');
+  
+  scanner = new Html5Qrcode("scanner-viewport");
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 15, qrbox: { width: 300, height: 200 } },
+    (txt) => {
+      // ¡Éxito!
+      if (navigator.vibrate) navigator.vibrate(80);
+      let resultado = '✅ Código leído: ' + txt;
+      document.getElementById('resultado').textContent = resultado;
+      document.getElementById('resultado').style.display = 'block';
+      log('✅ Escáner: ' + txt);
+      mostrarToast('✅ Código detectado');
+      clearTimeout(ocrTimeout);
+      cerrarEscaner();
+    },
+    () => {
+      // Error o no detectado
+      log('⏳ Escáner buscando...');
+    }
+  );
+  
+  // Mostrar botón OCR después de 5 segundos si no lee
+  ocrTimeout = setTimeout(() => {
+    document.getElementById('btn-ocr').style.display = 'block';
+    log('💡 ¿No lee? Prueba OCR');
+  }, 5000);
+}
+
+function cerrarEscaner() {
+  clearTimeout(ocrTimeout);
+  if (scanner) {
+    scanner.stop().then(() => {
+      document.getElementById('scanner-modal').style.display = 'none';
+      document.getElementById('btn-ocr').style.display = 'none';
+      document.getElementById('ocr-status').style.display = 'none';
+    });
+  } else {
+    document.getElementById('scanner-modal').style.display = 'none';
+  }
+}
+
+async function leerOCR() {
+  document.getElementById('btn-ocr').style.display = 'none';
+  document.getElementById('ocr-status').style.display = 'block';
+  log('🔢 Iniciando OCR...');
+  
+  try {
+    // Capturar frame del video
+    let viewport = document.getElementById('scanner-viewport');
+    let video = viewport.querySelector('video');
+    
+    if (!video) {
+      log('❌ No se encontró el video');
+      document.getElementById('ocr-status').style.display = 'none';
+      document.getElementById('btn-ocr').style.display = 'block';
+      return;
+    }
+    
+    // Crear canvas para capturar
+    let canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    let ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    log('📸 Imagen capturada. Procesando...');
+    
+    // OCR con Tesseract (solo números, español)
+    let result = await Tesseract.recognize(canvas, 'eng', {
+      tessedit_char_whitelist: '0123456789',
+      tessedit_pageseg_mode: '7'
+    });
+    
+    let texto = result.data.text.replace(/\s/g, '');
+    log('📝 Texto crudo: ' + texto);
+    
+    // Buscar números de 13 dígitos (EAN-13)
+    let match = texto.match(/\d{13}/);
+    if (match) {
+      let codigo = match[0];
+      document.getElementById('resultado').textContent = '✅ OCR detectó: ' + codigo;
+      document.getElementById('resultado').style.display = 'block';
+      log('✅ OCR exitoso: ' + codigo);
+      mostrarToast('✅ Código: ' + codigo);
+      cerrarEscaner();
+    } else {
+      // Buscar números más cortos
+      let matchShort = texto.match(/\d{8,}/);
+      if (matchShort) {
+        let codigo = matchShort[0];
+        document.getElementById('resultado').textContent = '⚠️ Posible código: ' + codigo + ' (verificar)';
+        document.getElementById('resultado').style.display = 'block';
+        log('⚠️ OCR parcial: ' + codigo);
+        document.getElementById('ocr-status').style.display = 'none';
+        document.getElementById('btn-ocr').style.display = 'block';
+      } else {
+        log('❌ No se detectaron números largos');
+        document.getElementById('ocr-status').style.display = 'none';
+        document.getElementById('btn-ocr').style.display = 'block';
+        mostrarToast('❌ No se detectaron números');
+      }
+    }
+  } catch(err) {
+    log('❌ Error OCR: ' + err.message);
+    document.getElementById('ocr-status').style.display = 'none';
+    document.getElementById('btn-ocr').style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
