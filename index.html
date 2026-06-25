@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon-512.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/tienda/sw.js');
@@ -138,10 +138,7 @@
       background: var(--surface); border-radius: var(--radius);
       padding: 10px; margin-bottom: 7px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); text-align: center;
     }
-    .totals-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 4px 0;
-    }
+    .totals-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
     .totals-items { font-size: 0.73rem; color: var(--text-secondary); }
     .totals-amount { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
     .totals-pago { font-size: 0.7rem; color: var(--text-secondary); }
@@ -181,7 +178,8 @@
     @keyframes pulseBadge { 0%,100%{transform:scale(1);} 50%{transform:scale(1.25);} }
     
     #scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
-    #scanner-viewport { width: 100%; max-width: 100%; height: 70vh; border-radius: 0; overflow: hidden; border: none; }
+    #scanner-viewport { width: 100%; height: 60vh; overflow: hidden; position: relative; }
+    #scanner-viewport video, #scanner-viewport canvas { width: 100%; height: 100%; object-fit: cover; }
     .laser-line { position: absolute; top: 50%; left: 5%; width: 90%; height: 2px; background: #FF3B30; box-shadow: 0 0 6px #FF3B30; animation: laser 2s ease-in-out infinite; z-index: 10; }
     @keyframes laser { 0%,100%{top:20%;} 50%{top:80%;} }
     #close-scanner { margin-top: 18px; background: none; border: none; color: white; font-size: 1.8rem; cursor: pointer; }
@@ -334,7 +332,7 @@
 const URL_API = "https://script.google.com/macros/s/AKfycbz4AXMDHKx6NEi6eveNnVCeRLqoFqAaA-N2ctzJO3xCE6qlZPKB_EtblZurORqONthJzQ/exec";
 let productos = [];
 let carrito = [];
-let scanner = null;
+let scannerContext = '';
 let codigoEdicion = '';
 let usuarioActual = '';
 let tipoPagoSeleccionado = 'Tarjeta Crédito';
@@ -461,16 +459,44 @@ function cancelarEdicion() {
   renderizarProductos(productos);
 }
 
+// QUAGGA ESCÁNER
 function abrirEscaner(ctx) {
+  scannerContext = ctx;
   document.getElementById('scanner-modal').style.display = 'flex';
-  scanner = new Html5Qrcode("scanner-viewport");
-  scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 350, height: 250 } },
-    (txt) => { navigator.vibrate&&navigator.vibrate(80); cerrarEscaner();
-      if (ctx==='productos') { document.getElementById('busqueda-producto').value=txt; document.getElementById('busqueda-producto').dispatchEvent(new Event('input')); }
-      else { document.getElementById('input-codigo-vender').value=txt; agregarAlCarrito(); }
-    }, () => {});
+  Quagga.init({
+    inputStream: {
+      name: "Live",
+      type: "LiveStream",
+      target: document.querySelector('#scanner-viewport'),
+      constraints: { facingMode: "environment" }
+    },
+    decoder: {
+      readers: ["ean_reader", "ean_8_reader", "code_128_reader", "code_39_reader", "upc_reader", "upc_e_reader", "itf_reader", "codabar_reader"]
+    },
+    locate: true,
+    numOfWorkers: 2
+  }, function(err) {
+    if (err) { mostrarToast('Error al abrir cámara'); cerrarEscaner(); return; }
+    Quagga.start();
+  });
+  Quagga.onDetected(function(result) {
+    let codigo = result.codeResult.code;
+    if (navigator.vibrate) navigator.vibrate(80);
+    cerrarEscaner();
+    if (scannerContext === 'productos') {
+      document.getElementById('busqueda-producto').value = codigo;
+      document.getElementById('busqueda-producto').dispatchEvent(new Event('input'));
+    } else {
+      document.getElementById('input-codigo-vender').value = codigo;
+      agregarAlCarrito();
+    }
+  });
 }
-function cerrarEscaner() { scanner&&scanner.stop().then(()=>document.getElementById('scanner-modal').style.display='none'); }
+
+function cerrarEscaner() {
+  Quagga.stop();
+  document.getElementById('scanner-modal').style.display = 'none';
+}
 
 function agregarRapido(id) {
   let p = productos.find(x=>x.id===id);
@@ -549,10 +575,8 @@ function actualizarTotales() {
   let descDisplay = document.getElementById('descuento-display');
   if (total > 0) {
     display.textContent = '💳 ' + tipoPagoSeleccionado;
-    if (tipoPagoSeleccionado === 'Nomina') {
-      descDisplay.style.display = 'block';
-      descDisplay.textContent = 'Nómina (-10%): $' + (total * 0.9).toFixed(2);
-    } else { descDisplay.style.display = 'none'; }
+    if (tipoPagoSeleccionado === 'Nomina') { descDisplay.style.display = 'block'; descDisplay.textContent = 'Nómina (-10%): $' + (total * 0.9).toFixed(2); }
+    else { descDisplay.style.display = 'none'; }
   }
 }
 
@@ -588,12 +612,10 @@ function ejecutarCobro() {
   fetch(URL_API, { method: 'POST', body: JSON.stringify(body) })
     .then(() => { 
       mostrarToast('✅ Venta registrada'); 
-      carrito = []; 
-      renderizarCarrito(); 
-      cargarProductos();
+      carrito = []; renderizarCarrito(); cargarProductos();
       tipoPagoSeleccionado = 'Tarjeta Crédito';
       document.querySelectorAll('#payment-options .payment-btn').forEach(b => b.classList.remove('selected'));
-      document.querySelector('#payment-options .payment-btn').classList.add('selected');
+      if (document.querySelector('#payment-options .payment-btn')) document.querySelector('#payment-options .payment-btn').classList.add('selected');
       actualizarTotales();
     });
 }
