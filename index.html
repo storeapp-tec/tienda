@@ -419,56 +419,78 @@
         }
 
         function renderizarResumenFinanzas() {
-            // 1. Cobros de participantes
-            const activos = data.participantes.filter(p => p.activo);
-            const total = activos.length;
-            const pagadosInsc = activos.filter(p => p.pagos.inscripcion.pagado).length;
-            const pagadosComp = activos.filter(p => p.pagos.compendio.pagado).length;
-            const pagadosCruc = activos.filter(p => p.pagos.crucifijo.pagado).length;
-            
-            const totalInsc = pagadosInsc * data.config.montoInscripcion;
-            const totalComp = pagadosComp * data.config.montoCompendio;
-            const totalCruc = pagadosCruc * data.config.montoCrucifijo;
+    // 1. Cobros de participantes
+    const activos = data.participantes.filter(p => p.activo);
+    const total = activos.length;
+    const pagadosInsc = activos.filter(p => p.pagos.inscripcion.pagado).length;
+    const pagadosComp = activos.filter(p => p.pagos.compendio.pagado).length;
+    const pagadosCruc = activos.filter(p => p.pagos.crucifijo.pagado).length;
+    
+    const totalInsc = pagadosInsc * data.config.montoInscripcion;
+    const totalComp = pagadosComp * data.config.montoCompendio;
+    const totalCruc = pagadosCruc * data.config.montoCrucifijo;
 
-            // 2. Ingresos/Gastos manuales (actividades, donativos, compras)
-            const finanzas = data.finanzas || [];
-            const ingresosManuales = finanzas.filter(m => m.tipo === 'ingreso').reduce((sum, m) => sum + m.monto, 0);
-            const gastosManuales = finanzas.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + m.monto, 0);
+    // 2. Ingresos/Gastos manuales (actividades, donativos, compras)
+    const finanzas = data.finanzas || [];
+    const ingresosManuales = finanzas.filter(m => m.tipo === 'ingreso').reduce((sum, m) => sum + m.monto, 0);
+    const gastosManuales = finanzas.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + m.monto, 0);
 
-            // 3. Totales disponibles (SOLO Compendio + Crucifijo + Ingresos manuales - Gastos)
-            // Las inscripciones NO se suman al disponible (son para la parroquia)
-            const totalDisponible = totalComp + totalCruc + ingresosManuales - gastosManuales;
+    // 3. Totales
+    // INGRESOS = Compendios + Crucifijos + Ingresos manuales
+    const totalIngresos = totalComp + totalCruc + ingresosManuales;
+    // GASTOS = Gastos manuales
+    const totalGastos = gastosManuales;
+    // DISPONIBLE = Ingresos - Gastos
+    const disponible = totalIngresos - totalGastos;
 
-            // 4. Mostrar en la interfaz
-            document.getElementById('totalIngresos').textContent = `$${(totalComp + totalCruc + ingresosManuales).toFixed(2)}`;
-            document.getElementById('totalGastos').textContent = `$${gastosManuales.toFixed(2)}`;
-            document.getElementById('totalSaldo').textContent = `$${totalDisponible.toFixed(2)}`;
+    // 4. Mostrar en la interfaz
+    document.getElementById('totalIngresos').textContent = `$${totalIngresos.toFixed(2)}`;
+    document.getElementById('totalGastos').textContent = `$${totalGastos.toFixed(2)}`;
+    document.getElementById('totalSaldo').textContent = `$${disponible.toFixed(2)}`;
 
-            // 5. Desglose completo (para control)
-            const resumenHTML = `
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #ddd; text-align:center;">
-                    <div>
-                        <div style="font-size:10px; color:#666;">📝 Inscripción</div>
-                        <div style="font-size:14px; font-weight:bold; color:#e67e22;">${pagadosInsc}/${total} ($${totalInsc.toFixed(2)})</div>
-                        <div style="font-size:9px; color:#999;">(Para la parroquia)</div>
-                    </div>
-                    <div>
-                        <div style="font-size:10px; color:#666;">📚 Compendio</div>
-                        <div style="font-size:14px; font-weight:bold; color:#27ae60;">${pagadosComp}/${total} ($${totalComp.toFixed(2)})</div>
-                    </div>
-                    <div>
-                        <div style="font-size:10px; color:#666;">✝️ Crucifijo</div>
-                        <div style="font-size:14px; font-weight:bold; color:#8e44ad;">${pagadosCruc}/${total} ($${totalCruc.toFixed(2)})</div>
-                    </div>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; text-align:center; font-size:12px; color:#666;">
-                    <div>💰 Ingresos actividades: $${ingresosManuales.toFixed(2)}</div>
-                    <div>💸 Gastos: $${gastosManuales.toFixed(2)}</div>
-                </div>
-                <div style="text-align:center; margin-top:6px; font-size:13px; font-weight:bold; color:#2c3e50;">
-                    📊 Disponible: $${totalDisponible.toFixed(2)}
-                </div>
-            `;
+    // 5. Desglose de cobros (igual que en Admin)
+    const resumenHTML = `
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #ddd; text-align:center;">
+            <div>
+                <div style="font-size:10px; color:#666;">📝 Inscripción</div>
+                <div style="font-size:14px; font-weight:bold; color:#e67e22;">${pagadosInsc}/${total} ($${totalInsc.toFixed(2)})</div>
+            </div>
+            <div>
+                <div style="font-size:10px; color:#666;">📚 Compendio</div>
+                <div style="font-size:14px; font-weight:bold; color:#27ae60;">${pagadosComp}/${total} ($${totalComp.toFixed(2)})</div>
+            </div>
+            <div>
+                <div style="font-size:10px; color:#666;">✝️ Crucifijo</div>
+                <div style="font-size:14px; font-weight:bold; color:#8e44ad;">${pagadosCruc}/${total} ($${totalCruc.toFixed(2)})</div>
+            </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; text-align:center; font-size:12px; color:#666;">
+            <div>💰 Ingresos actividades: $${ingresosManuales.toFixed(2)}</div>
+            <div>💸 Gastos: $${gastosManuales.toFixed(2)}</div>
+        </div>
+        <div style="text-align:center; margin-top:6px; font-size:13px; font-weight:bold; color:#2c3e50;">
+            📊 Disponible: $${disponible.toFixed(2)}
+        </div>
+    `;
+
+    // Insertar el resumen
+    let existingResumen = document.getElementById('resumenCobrosFinanzas');
+    if (existingResumen) {
+        existingResumen.innerHTML = resumenHTML;
+    } else {
+        const resumenDiv = document.createElement('div');
+        resumenDiv.id = 'resumenCobrosFinanzas';
+        resumenDiv.innerHTML = resumenHTML;
+        const resumenItems = document.querySelector('.finanzas-resumen');
+        resumenItems.parentElement.insertBefore(resumenDiv, resumenItems.nextSibling);
+    }
+
+    // Resaltar filtro activo
+    document.querySelectorAll('.finanzas-resumen .item').forEach(item => {
+        const filtro = item.dataset.filtro;
+        item.classList.toggle('active', filtro === filtroFinanzasActual);
+    });
+}
 
             // Insertar el resumen
             const summaryCard = document.querySelector('.finanzas-resumen').parentElement;
