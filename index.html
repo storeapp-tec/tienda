@@ -150,8 +150,10 @@
                 </div>
             </div>
 
-            <!-- Resumen de cobros (igual que en Admin) -->
-            <div id="resumenCobrosFinanzas" class="resumen-cobros"></div>
+            <!-- ===== RESUMEN DE COBROS (IGUAL QUE ADMIN) ===== -->
+            <div id="resumenCobrosFinanzas" class="resumen-cobros">
+                <!-- Aquí se llena con JavaScript -->
+            </div>
 
             <div class="filtros-rapidos">
                 <button class="filtro-btn active" data-filtro="todos" onclick="filtrarFinanzas('todos')">📋 Todos</button>
@@ -476,22 +478,7 @@
             `;
             document.getElementById('resumenCobrosFinanzas').innerHTML = resumenHTML;
 
-            // 6. Actualizar los botones de filtro con la información de cobros
-            const inscBtn = document.querySelector('.filtro-btn[data-filtro="inscripcion"]');
-            const compBtn = document.querySelector('.filtro-btn[data-filtro="compendio"]');
-            const crucBtn = document.querySelector('.filtro-btn[data-filtro="crucifijo"]');
-            
-            if (inscBtn) {
-                inscBtn.innerHTML = `📝 Inscripción ${pagadosInsc}/${total}`;
-            }
-            if (compBtn) {
-                compBtn.innerHTML = `📚 Compendio ${pagadosComp}/${total}`;
-            }
-            if (crucBtn) {
-                crucBtn.innerHTML = `✝️ Crucifijo ${pagadosCruc}/${total}`;
-            }
-
-            // 7. Resaltar filtro activo
+            // 6. Resaltar filtro activo
             document.querySelectorAll('.finanzas-resumen .item').forEach(item => {
                 const filtro = item.dataset.filtro;
                 item.classList.toggle('active', filtro === filtroFinanzasActual);
