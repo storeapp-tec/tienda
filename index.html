@@ -67,7 +67,7 @@
         .filtro-btn { padding: 6px 12px; border: 1px solid #ddd; border-radius: 16px; background: white; font-size: 11px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .filtro-btn.active { border-color: #3498db; background: #3498db; color: white; }
         .movimiento-item { display: flex; align-items: center; padding: 6px 8px; border-bottom: 1px solid #f0f0f0; gap: 6px; font-size: 12px; }
-        .movimiento-item .fecha { color: #666; min-width: 65px; }
+        .movimiento-item .fecha { color: #666; min-width: 80px; font-size: 11px; }
         .movimiento-item .concepto { flex: 1; }
         .movimiento-item .monto { font-weight: bold; min-width: 50px; text-align: right; }
         .movimiento-item .monto.ingreso { color: #27ae60; }
@@ -89,7 +89,11 @@
         .resumen-periodo .linea { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee; font-size: 13px; }
         .periodo-item { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
         .periodo-item .total { float: right; font-weight: bold; color: #27ae60; }
-        @media (max-width: 480px) { .summary-grid { grid-template-columns: 1fr; gap: 3px; } .form-row { grid-template-columns: 1fr; } .finanzas-resumen { grid-template-columns: 1fr 1fr 1fr; gap: 4px; } .filtro-btn { font-size: 10px; padding: 4px 8px; } }
+        .resumen-cobros { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd; text-align: center; }
+        .resumen-cobros .item .label { font-size: 10px; color: #666; }
+        .resumen-cobros .item .value { font-size: 14px; font-weight: bold; }
+        .resumen-cobros .item .sub { font-size: 9px; color: #999; }
+        @media (max-width: 480px) { .summary-grid { grid-template-columns: 1fr; gap: 3px; } .form-row { grid-template-columns: 1fr; } .finanzas-resumen { grid-template-columns: 1fr 1fr 1fr; gap: 4px; } .filtro-btn { font-size: 10px; padding: 4px 8px; } .resumen-cobros { grid-template-columns: 1fr; gap: 4px; } }
     </style>
 </head>
 <body>
@@ -145,6 +149,10 @@
                     <div class="value" id="totalSaldo" style="color:#3498db;">$0</div>
                 </div>
             </div>
+
+            <!-- Resumen de cobros (igual que en Admin) -->
+            <div id="resumenCobrosFinanzas" class="resumen-cobros"></div>
+
             <div class="filtros-rapidos">
                 <button class="filtro-btn active" data-filtro="todos" onclick="filtrarFinanzas('todos')">📋 Todos</button>
                 <button class="filtro-btn" data-filtro="inscripcion" onclick="filtrarFinanzas('inscripcion')">📝 Inscripción</button>
@@ -448,22 +456,42 @@
             document.getElementById('totalGastos').textContent = `$${totalGastos.toFixed(2)}`;
             document.getElementById('totalSaldo').textContent = `$${disponible.toFixed(2)}`;
 
-            // 5. Actualizar los botones de filtro con la información de cobros
+            // 5. Mostrar resumen de cobros (igual que en Admin)
+            const resumenHTML = `
+                <div class="item">
+                    <div class="label">📝 Inscripción</div>
+                    <div class="value" style="color:#e67e22;">${pagadosInsc}/${total}</div>
+                    <div class="sub">$${totalInsc.toFixed(2)}</div>
+                </div>
+                <div class="item">
+                    <div class="label">📚 Compendio</div>
+                    <div class="value" style="color:#27ae60;">${pagadosComp}/${total}</div>
+                    <div class="sub">$${totalComp.toFixed(2)}</div>
+                </div>
+                <div class="item">
+                    <div class="label">✝️ Crucifijo</div>
+                    <div class="value" style="color:#8e44ad;">${pagadosCruc}/${total}</div>
+                    <div class="sub">$${totalCruc.toFixed(2)}</div>
+                </div>
+            `;
+            document.getElementById('resumenCobrosFinanzas').innerHTML = resumenHTML;
+
+            // 6. Actualizar los botones de filtro con la información de cobros
             const inscBtn = document.querySelector('.filtro-btn[data-filtro="inscripcion"]');
             const compBtn = document.querySelector('.filtro-btn[data-filtro="compendio"]');
             const crucBtn = document.querySelector('.filtro-btn[data-filtro="crucifijo"]');
             
             if (inscBtn) {
-                inscBtn.innerHTML = `📝 Inscripción ${pagadosInsc}/${total} $${totalInsc.toFixed(0)}`;
+                inscBtn.innerHTML = `📝 Inscripción ${pagadosInsc}/${total}`;
             }
             if (compBtn) {
-                compBtn.innerHTML = `📚 Compendio ${pagadosComp}/${total} $${totalComp.toFixed(0)}`;
+                compBtn.innerHTML = `📚 Compendio ${pagadosComp}/${total}`;
             }
             if (crucBtn) {
-                crucBtn.innerHTML = `✝️ Crucifijo ${pagadosCruc}/${total} $${totalCruc.toFixed(0)}`;
+                crucBtn.innerHTML = `✝️ Crucifijo ${pagadosCruc}/${total}`;
             }
 
-            // 6. Resaltar filtro activo
+            // 7. Resaltar filtro activo
             document.querySelectorAll('.finanzas-resumen .item').forEach(item => {
                 const filtro = item.dataset.filtro;
                 item.classList.toggle('active', filtro === filtroFinanzasActual);
@@ -727,7 +755,29 @@
         // UTILIDADES
         // ============================================
         function obtenerFechaActual() { return new Date().toISOString().split('T')[0]; }
-        function formatearFecha(fecha) { if (!fecha) return 'Sin fecha'; const parts = fecha.split('-'); return `${parts[2]}/${parts[1]}/${parts[0]}`; }
+        
+        function formatearFecha(fecha) {
+            if (!fecha) return 'Sin fecha';
+            // Si la fecha ya viene en formato corto (dd/mm/yyyy), devolverla igual
+            if (fecha.includes('/')) return fecha;
+            // Si viene en formato ISO (yyyy-mm-dd), convertir a dd/mm/yyyy
+            const parts = fecha.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            // Si es un objeto Date o string raro, intentar convertirlo
+            try {
+                const d = new Date(fecha);
+                if (!isNaN(d.getTime())) {
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const year = d.getFullYear();
+                    return `${day}/${month}/${year}`;
+                }
+            } catch(e) {}
+            return fecha;
+        }
+
         function configurarTabs() {
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', function() {
