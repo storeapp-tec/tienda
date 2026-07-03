@@ -1,798 +1,622 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestión Evangelización</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; padding-bottom: 70px; color: #333; font-size: 14px; }
-        .header { background: #1a2634; color: white; padding: 12px; text-align: center; position: sticky; top: 0; z-index: 100; }
-        .header h1 { font-size: 17px; font-weight: 600; }
-        .tabs { display: flex; background: #2c3e50; position: sticky; top: 49px; z-index: 99; }
-        .tab { flex: 1; padding: 10px; text-align: center; color: #bdc3c7; background: transparent; border: none; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; }
-        .tab.active { color: white; border-bottom-color: #3498db; }
-        .content { display: none; padding: 12px; max-width: 600px; margin: 0 auto; }
-        .content.active { display: block; }
-        .card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-        .card-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #2c3e50; }
-        .search-box { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 8px; }
-        .search-box:focus { outline: none; border-color: #3498db; }
-        .participant-list { max-height: 400px; overflow-y: auto; }
-        .participant-item { display: flex; align-items: center; padding: 8px 6px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-        .participant-item:hover { background: #f8f9fa; }
-        .participant-item.inactive { opacity: 0.5; background: #f5f5f5; }
-        .participant-name { flex: 1; font-size: 13px; font-weight: 500; }
-        .participant-status { display: flex; gap: 5px; margin-left: 6px; }
-        .status-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 11px; font-weight: bold; color: white; }
-        .status-icon.pagado { background: #27ae60; }
-        .status-icon.pendiente { background: #e74c3c; }
-        .status-icon.inactivo-icon { background: #95a5a6; font-size: 10px; }
-        .summary { background: #1a2634; color: white; padding: 12px; border-radius: 10px; position: sticky; bottom: 0; margin-top: 8px; }
-        .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 4px; }
-        .summary-item { text-align: center; }
-        .summary-item .label { font-size: 10px; opacity: 0.8; }
-        .summary-item .value { font-size: 14px; font-weight: bold; }
-        .btn { padding: 6px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-        .btn-sm { padding: 4px 10px; font-size: 11px; width: auto; }
-        .btn-primary { background: #3498db; color: white; }
-        .btn-success { background: #27ae60; color: white; }
-        .btn-danger { background: #e74c3c; color: white; }
-        .btn-warning { background: #f39c12; color: white; }
-        .btn-secondary { background: #95a5a6; color: white; }
-        .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-overlay.active { display: flex; }
-        .modal { background: white; border-radius: 14px; padding: 20px; max-width: 400px; width: 100%; max-height: 90vh; overflow-y: auto; }
-        .modal h2 { font-size: 16px; margin-bottom: 12px; color: #2c3e50; }
-        .modal-close { float: right; background: none; border: none; font-size: 22px; cursor: pointer; color: #999; }
-        .modal-close:hover { color: #333; }
-        .pago-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-        .pago-item:last-child { border-bottom: none; }
-        .pago-label { font-weight: 500; flex: 1; font-size: 13px; }
-        .pago-fecha { font-size: 11px; color: #666; margin: 0 6px; }
-        .btn-toggle { padding: 3px 12px; border: none; border-radius: 16px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .btn-toggle.pagado { background: #27ae60; color: white; }
-        .btn-toggle.pendiente { background: #e74c3c; color: white; }
-        .btn-toggle.activo { background: #3498db; color: white; }
-        .btn-toggle.inactivo { background: #95a5a6; color: white; }
-        .finanzas-resumen { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; text-align: center; }
-        .finanzas-resumen .item { background: #f8f9fa; padding: 8px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-        .finanzas-resumen .item:hover { background: #e9ecef; }
-        .finanzas-resumen .item.active { background: #3498db; color: white; }
-        .finanzas-resumen .item.active .label { color: rgba(255,255,255,0.8); }
-        .finanzas-resumen .label { font-size: 10px; color: #666; }
-        .finanzas-resumen .value { font-size: 16px; font-weight: bold; }
-        .filtros-rapidos { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
-        .filtro-btn { padding: 6px 12px; border: 1px solid #ddd; border-radius: 16px; background: white; font-size: 11px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-        .filtro-btn.active { border-color: #3498db; background: #3498db; color: white; }
-        .movimiento-item { display: flex; align-items: center; padding: 6px 8px; border-bottom: 1px solid #f0f0f0; gap: 6px; font-size: 12px; }
-        .movimiento-item .fecha { color: #666; min-width: 80px; font-size: 11px; }
-        .movimiento-item .concepto { flex: 1; }
-        .movimiento-item .monto { font-weight: bold; min-width: 50px; text-align: right; }
-        .movimiento-item .monto.ingreso { color: #27ae60; }
-        .movimiento-item .monto.gasto { color: #e74c3c; }
-        .btn-accion { background: none; border: none; font-size: 13px; cursor: pointer; padding: 0 3px; }
-        .btn-editar { color: #3498db; }
-        .btn-eliminar { color: #e74c3c; }
-        .form-group { margin-bottom: 6px; }
-        .form-group label { display: block; font-size: 11px; font-weight: 600; color: #555; margin-bottom: 2px; }
-        .form-control { width: 100%; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
-        .form-control:focus { outline: none; border-color: #3498db; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center; flex-direction: column; }
-        .loading-overlay.active { display: flex; }
-        .loading-spinner { width: 36px; height: 36px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-text { color: white; margin-top: 10px; font-size: 13px; }
-        .empty-state { text-align: center; padding: 20px 0; color: #999; font-size: 13px; }
-        .resumen-periodo .linea { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee; font-size: 13px; }
-        .periodo-item { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
-        .periodo-item .total { float: right; font-weight: bold; color: #27ae60; }
-        .resumen-cobros { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd; text-align: center; }
-        .resumen-cobros .item .label { font-size: 10px; color: #666; }
-        .resumen-cobros .item .value { font-size: 14px; font-weight: bold; }
-        .resumen-cobros .item .sub { font-size: 9px; color: #999; }
-        @media (max-width: 480px) { .summary-grid { grid-template-columns: 1fr; gap: 3px; } .form-row { grid-template-columns: 1fr; } .finanzas-resumen { grid-template-columns: 1fr 1fr 1fr; gap: 4px; } .filtro-btn { font-size: 10px; padding: 4px 8px; } .resumen-cobros { grid-template-columns: 1fr; gap: 4px; } }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Store</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-512.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/tienda/sw.js');
+    }
+  </script>
+  <style>
+    :root {
+      --primary: #003D4D;
+      --accent: #1B998B;
+      --danger: #D64545;
+      --warning: #E6A817;
+      --bg: #F5F7FA;
+      --surface: #FFFFFF;
+      --text: #1E1E1E;
+      --text-secondary: #666666;
+      --border: #E0E0E0;
+      --radius: 14px;
+      --shadow: 0 1px 6px rgba(0,0,0,0.05);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      font-size: 0.82rem;
+    }
+    
+    .header {
+      background: var(--surface);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .header-logo-box { width: 34px; height: 34px; border-radius: 9px; background: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .header-logo { width: 18px; height: 18px; object-fit: contain; filter: brightness(0) invert(1); }
+    .header-title { font-size: 1.05rem; font-weight: 700; color: var(--primary); }
+    .header-user { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 500; color: var(--text-secondary); }
+    
+    .main-content { flex: 1; overflow-y: auto; padding: 10px; padding-bottom: 75px; }
+    .view { display: none; animation: fadeIn 0.2s ease; }
+    .view.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    .card { background: var(--surface); border-radius: var(--radius); padding: 10px; margin-bottom: 7px; box-shadow: var(--shadow); }
+    .card-header { font-size: 0.85rem; font-weight: 600; }
+    
+    .input-row { display: flex; gap: 5px; align-items: center; margin-bottom: 6px; }
+    input[type="text"], input[type="number"], select {
+      flex: 1; min-width: 0; padding: 8px 10px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 0.82rem; font-family: 'Inter', sans-serif;
+      outline: none; background: var(--bg);
+    }
+    input:focus { border-color: var(--primary); background: var(--surface); }
+    input:disabled { background: #F0F0F0; color: #999; }
+    
+    .btn {
+      padding: 8px 14px; border: none; border-radius: 10px;
+      font-weight: 600; font-size: 0.78rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 3px;
+      font-family: 'Inter', sans-serif; white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .btn:active { transform: scale(0.96); opacity: 0.85; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+    .btn-icon { width: 36px; height: 36px; padding: 0; border-radius: 10px; font-size: 1rem; flex-shrink: 0; }
+    .btn-sm { padding: 5px 10px; font-size: 0.7rem; border-radius: 6px; }
+    
+    .quick-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+    .btn-quick { padding: 6px 10px; font-size: 0.68rem; border-radius: 8px; background: #E8F5E9; color: var(--accent); border: 1px solid var(--accent); font-weight: 500; cursor: pointer; white-space: nowrap; }
+    .btn-quick:active { background: var(--accent); color: white; }
+    
+    .product-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px; border-bottom: 1px solid var(--border); gap: 8px; cursor: pointer;
+    }
+    .product-item:active { background: var(--bg); }
+    .product-item.critical {
+      border-left: 3px solid var(--danger); background: #FFF5F5;
+      animation: pulseBorder 1.8s ease-in-out infinite;
+    }
+    @keyframes pulseBorder { 0%,100%{border-left-color:var(--danger);} 50%{border-left-color:#FF6B6B;} }
+    .product-main { flex: 1; min-width: 0; }
+    .product-id { font-size: 0.82rem; font-weight: 600; margin-bottom: 1px; }
+    .product-name { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 3px; }
+    .product-meta { display: flex; align-items: center; gap: 8px; }
+    .product-cat { font-size: 0.6rem; background: #E8F5E9; color: #1B998B; padding: 1px 5px; border-radius: 3px; }
+    .product-stock { font-size: 0.7rem; font-weight: 500; display: flex; align-items: center; gap: 3px; }
+    .stock-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .stock-dot.normal { background: #1B998B; }
+    .stock-dot.low { background: #E6A817; }
+    .stock-dot.critical { background: #D64545; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.5);} }
+    .product-price { font-weight: 700; color: var(--primary); font-size: 0.88rem; white-space: nowrap; }
+    .product-edit-icon { font-size: 0.85rem; color: var(--text-secondary); opacity: 0.5; }
+    
+    #lista-productos { max-height: calc(100vh - 340px); overflow-y: auto; }
+    
+    .cart-item {
+      display: flex; align-items: center; gap: 4px;
+      padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.7rem;
+    }
+    .cart-info { flex: 1; min-width: 0; }
+    .cart-id { font-size: 0.7rem; font-weight: 600; }
+    .cart-name { font-size: 0.66rem; color: var(--text-secondary); }
+    .cart-unit { font-size: 0.63rem; color: var(--text-secondary); }
+    .cart-controls { display: flex; align-items: center; gap: 2px; }
+    .cart-qty { width: 26px; text-align: center; font-weight: 600; font-size: 0.68rem; border: 1px solid var(--border); border-radius: 4px; padding: 2px; background: var(--bg); }
+    .cart-subtotal { font-weight: 600; color: var(--primary); min-width: 38px; text-align: right; font-size: 0.7rem; }
+    .btn-delete { background: none; border: none; color: #bbb; font-size: 0.7rem; cursor: pointer; padding: 1px 3px; border-radius: 50%; flex-shrink: 0; }
+    .btn-delete:active { color: var(--danger); }
+    
+    .cart-category-header { font-size: 0.68rem; font-weight: 600; padding: 3px 0; margin-top: 2px; color: var(--primary); border-bottom: 2px solid var(--accent); }
+    .cart-category-subtotal { font-size: 0.66rem; color: var(--text-secondary); text-align: right; padding: 2px 0; }
+    
+    .totals-bar {
+      background: var(--surface); border-radius: var(--radius);
+      padding: 10px; margin-bottom: 7px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); text-align: center;
+    }
+    .totals-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+    .totals-items { font-size: 0.73rem; color: var(--text-secondary); }
+    .totals-amount { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+    .totals-pago { font-size: 0.7rem; color: var(--text-secondary); }
+    .totals-descuento { font-size: 0.8rem; font-weight: 600; color: var(--accent); margin-top: 2px; display: none; }
+    
+    .ticket-header-row { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 6px; }
+    .menu-container { position: relative; }
+    .menu-btn { background: none; border: none; font-size: 1.3rem; cursor: pointer; padding: 2px 6px; border-radius: 6px; color: var(--text-secondary); }
+    .menu-dropdown {
+      display: none; position: absolute; top: 100%; right: 0;
+      background: var(--surface); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      z-index: 200; padding: 6px; min-width: 180px;
+      animation: dropIn 0.15s ease;
+    }
+    .menu-dropdown.show { display: block; }
+    @keyframes dropIn { from{opacity:0;transform:translateY(-6px);} to{opacity:1;transform:translateY(0);} }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; }
+    .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+    .checkbox-row label { font-size: 0.76rem; font-weight: 500; }
+    .devolution-options { margin-top: 6px; }
+    
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; width: 100%;
+      background: var(--surface); display: flex;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 1000;
+      padding: 4px 0; padding-bottom: env(safe-area-inset-bottom, 4px);
+    }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px; color: var(--text-secondary); font-size: 0.64rem; font-weight: 500; cursor: pointer; position: relative; }
+    .nav-item.active { color: var(--primary); font-weight: 600; }
+    .nav-icon { font-size: 1.2rem; }
+    .badge {
+      position: absolute; top: 0; right: calc(50% - 16px);
+      background: var(--danger); color: white; font-size: 0.6rem;
+      font-weight: 700; padding: 2px 6px; border-radius: 10px;
+      display: none; animation: pulseBadge 1.5s ease-in-out infinite;
+    }
+    @keyframes pulseBadge { 0%,100%{transform:scale(1);} 50%{transform:scale(1.25);} }
+    
+    #scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+    #scanner-viewport { width: 90%; max-width: 300px; aspect-ratio: 1; border-radius: 18px; overflow: hidden; border: 3px solid var(--accent); }
+    #close-scanner { margin-top: 18px; background: none; border: none; color: white; font-size: 1.8rem; cursor: pointer; }
+    
+    .empty-state { text-align: center; padding: 15px; color: var(--text-secondary); font-size: 0.78rem; }
+    .toast { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 18px; border-radius: 10px; font-weight: 500; z-index: 10000; display: none; font-size: 0.78rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    
+    .stock-label { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 2px; }
+    .stock-value { font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+    .form-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .form-row input { flex: 1; }
+    .form-row label { font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap; min-width: 55px; }
+    
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center; }
+    .modal-box { background: var(--surface); border-radius: 20px; padding: 20px; width: 90%; max-width: 340px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.25); animation: modalIn 0.25s ease; }
+    @keyframes modalIn { from{opacity:0;transform:scale(0.9);} to{opacity:1;transform:scale(1);} }
+    .modal-icon { font-size: 2.5rem; margin-bottom: 8px; }
+    .modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .modal-subtitle { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; }
+    .modal-buttons { display: flex; gap: 6px; margin-top: 8px; }
+    .modal-buttons button { flex: 1; }
+    
+    .payment-options { display: flex; flex-direction: column; gap: 5px; margin: 10px 0; }
+    .payment-btn { 
+      width: 100%; padding: 10px; border: 2px solid var(--border);
+      border-radius: 10px; background: var(--surface); font-weight: 500;
+      font-size: 0.75rem; cursor: pointer; text-align: center; 
+    }
+    .payment-btn.selected { border-color: var(--accent); background: #E8F8F5; color: var(--accent); font-weight: 600; }
+    
+    .welcome-box { text-align: center; padding: 40px 20px; }
+    .welcome-box h2 { font-size: 1.3rem; margin-bottom: 6px; color: var(--primary); }
+    .welcome-box p { color: var(--text-secondary); margin-bottom: 20px; font-size: 0.85rem; }
+  </style>
 </head>
 <body>
 
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">Cargando datos...</div>
+<div id="vista-bienvenida" class="view active">
+  <div class="welcome-box">
+    <div style="font-size:3rem;margin-bottom:10px;">👋</div>
+    <h2>Bienvenido a Store</h2>
+    <p>¿Cómo te llamas?</p>
+    <input type="text" id="input-nombre-usuario" placeholder="Escribe tu nombre" style="width:100%;max-width:280px;">
+    <button class="btn btn-primary" style="width:100%;max-width:280px;margin-top:8px;" onclick="guardarUsuario()">Entrar</button>
+  </div>
+</div>
+
+<div id="vista-app" class="view">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-logo-box"><img src="icon.svg" alt="Store" class="header-logo"></div>
+      <span class="header-title">Store</span>
     </div>
+    <div class="header-user" id="header-usuario"><span>👤</span><span id="nombre-usuario-header"></span></div>
+  </div>
 
-    <div class="header"><h1>📋 Gestión Evangelización</h1></div>
-
-    <div class="tabs">
-        <button class="tab active" data-tab="cobros">👥 Cobros</button>
-        <button class="tab" data-tab="finanzas">💰 Finanzas</button>
-        <button class="tab" data-tab="admin">⚙️ Admin</button>
+  <div class="main-content">
+    
+    <div id="vista-productos" class="view active">
+      <div class="card"><div class="input-row"><input type="text" id="busqueda-producto" placeholder="Escanea o busca por nombre..."><button class="btn btn-primary btn-icon" onclick="abrirEscaner('productos')">📷</button></div></div>
+      <div class="card" id="card-edicion-existente" style="display:none;">
+        <div class="card-header" id="titulo-edicion-existente">Producto</div>
+        <div style="margin-bottom:6px;"><label style="font-size:0.72rem;color:var(--text-secondary);">ID / Descripción</label><input type="text" id="edit-id-desc-existente" disabled style="width:100%;"></div>
+        <div class="stock-label">📦 Inventario actual: <span id="stock-actual-existente" class="stock-value">0 pzas</span></div>
+        <div class="form-row"><label>Precio:</label><input type="number" id="edit-precio-existente" disabled><button class="btn btn-sm btn-outline" onclick="habilitarPrecio()">✏️</button></div>
+        <div class="form-row"><label>Stock:</label><input type="number" id="edit-stock-existente" placeholder="Cantidad a agregar"></div>
+        <div style="margin-bottom:6px;"><select id="edit-categoria-existente"><option value="TEC">🏛️ TEC</option><option value="MILENIO">🎓 MILENIO</option></select></div>
+        <button class="btn btn-accent" style="width:100%;" onclick="guardarCambios()">💾 Guardar cambios</button>
+        <button class="btn btn-outline" style="width:100%;margin-top:4px;font-size:0.7rem;" onclick="cancelarEdicion()">Cerrar</button>
+      </div>
+      <div class="card"><div class="card-header">📦 Catálogo</div><div id="lista-productos">Cargando...</div></div>
     </div>
-
-    <!-- ===== COBROS ===== -->
-    <div id="cobros" class="content active">
-        <div class="card">
-            <div class="card-title">🔍 Buscar participante</div>
-            <input type="text" id="searchInput" class="search-box" placeholder="Escribe el nombre...">
-            <div class="btn-group">
-                <button class="btn btn-primary btn-sm" onclick="abrirModalAgregar()">➕ Agregar</button>
-                <button class="btn btn-warning btn-sm" onclick="abrirModalMontos()">💰 Cambiar montos</button>
-                <button class="btn btn-secondary btn-sm" onclick="recargarDatos()">🔄 Sincronizar</button>
-            </div>
+    
+    <div id="vista-vender" class="view">
+      <div class="card">
+        <div class="input-row"><input type="text" id="input-codigo-vender" placeholder="Escanea o código..."><button class="btn btn-primary btn-icon" onclick="abrirEscaner('vender')">📷</button></div>
+        <button class="btn btn-accent" style="width:100%;" onclick="agregarAlCarrito()">Agregar</button>
+        <div class="quick-btns">
+          <button class="btn-quick" onclick="agregarRapido('2010870300016')">🛍️ (S)</button>
+          <button class="btn-quick" onclick="agregarRapido('2010870400013')">🛍️ (M)</button>
+          <button class="btn-quick" onclick="agregarRapido('2010870600017')">🛍️ (L)</button>
+          <button class="btn-quick" onclick="agregarRapido('2011081900019')">📦 Caja</button>
+          <button class="btn-quick" onclick="agregarRapido('2010523100017')">🧢 NE Negra</button>
+          <button class="btn-quick" onclick="agregarRapido('2010541800012')">🧢 NE Gris</button>
         </div>
-        <div class="card">
-            <div class="card-title">📋 Participantes</div>
-            <div id="participantList" class="participant-list"></div>
+      </div>
+      
+      <div class="totals-bar">
+        <div class="totals-row">
+          <span class="totals-items" id="total-articulos">📦 0 artículos</span>
+          <span class="totals-amount" id="total-monto">$0</span>
+          <span class="totals-pago" id="tipo-pago-display"></span>
         </div>
-        <div class="summary" id="summary">
-            <div style="text-align:center; font-weight:bold; margin-bottom:3px; font-size:13px;">📊 Resumen</div>
-            <div id="summaryContent"></div>
-        </div>
+        <div class="totals-descuento" id="descuento-display"></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:6px;font-size:0.95rem;" id="btn-accion-principal" onclick="cobrar()">💳 Cobrar</button>
+      </div>
+      
+      <div class="card" style="max-height: 35vh; overflow-y: auto;">
+        <div class="ticket-header-row"><div class="card-header">🧾 Ticket</div><div class="menu-container"><button class="menu-btn" onclick="toggleMenu()">⋮</button><div class="menu-dropdown" id="menu-dropdown"><div class="checkbox-row"><input type="checkbox" id="modo-devolucion" onchange="toggleDevolucion()"><label for="modo-devolucion">Modo devolución</label></div></div></div></div>
+        <div class="devolution-options" id="devolucion-options" style="display:none;"><select id="motivo-devolucion" style="width:100%;"><option value="Cambio">Cambio</option><option value="Defecto">Defecto</option><option value="Garantía">Garantía</option><option value="Otro">Otro</option></select></div>
+        <div id="lista-carrito"><div class="empty-state">🛒 Vacío</div></div>
+      </div>
     </div>
-
-    <!-- ===== FINANZAS ===== -->
-    <div id="finanzas" class="content">
-        <div class="card" style="padding: 10px;">
-            <div class="finanzas-resumen">
-                <div class="item" data-filtro="ingreso" onclick="filtrarFinanzas('ingreso')">
-                    <div class="label">💰 Ingresos</div>
-                    <div class="value" id="totalIngresos" style="color:#27ae60;">$0</div>
-                </div>
-                <div class="item" data-filtro="gasto" onclick="filtrarFinanzas('gasto')">
-                    <div class="label">💸 Gastos</div>
-                    <div class="value" id="totalGastos" style="color:#e74c3c;">$0</div>
-                </div>
-                <div class="item" style="cursor:default;">
-                    <div class="label">📊 Disponible</div>
-                    <div class="value" id="totalSaldo" style="color:#3498db;">$0</div>
-                </div>
-            </div>
-
-            <!-- ===== RESUMEN DE COBROS (IGUAL QUE ADMIN) ===== -->
-            <div id="resumenCobrosFinanzas" class="resumen-cobros">
-                <!-- Aquí se llena con JavaScript -->
-            </div>
-
-            <div class="filtros-rapidos">
-                <button class="filtro-btn active" data-filtro="todos" onclick="filtrarFinanzas('todos')">📋 Todos</button>
-                <button class="filtro-btn" data-filtro="inscripcion" onclick="filtrarFinanzas('inscripcion')">📝 Inscripción</button>
-                <button class="filtro-btn" data-filtro="compendio" onclick="filtrarFinanzas('compendio')">📚 Compendio</button>
-                <button class="filtro-btn" data-filtro="crucifijo" onclick="filtrarFinanzas('crucifijo')">✝️ Crucifijo</button>
-            </div>
-        </div>
-        <div class="card" style="padding: 8px;">
-            <div id="finanzasList" class="historial-list" style="max-height:280px; overflow-y:auto;"></div>
-        </div>
-        <div class="card" style="padding: 10px;">
-            <div style="font-size:13px; font-weight:600; margin-bottom:6px; color:#2c3e50;">➕ Agregar movimiento</div>
-            <div class="form-group">
-                <select id="finTipo" class="form-control" style="font-size:13px; padding:5px 8px;">
-                    <option value="ingreso">💰 Ingreso</option>
-                    <option value="gasto">💸 Gasto</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <input type="text" id="finConcepto" class="form-control" placeholder="Concepto" style="font-size:13px; padding:5px 8px;">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <input type="number" id="finMonto" class="form-control" placeholder="Monto" step="0.01" style="font-size:13px; padding:5px 8px;">
-                </div>
-                <div class="form-group">
-                    <input type="date" id="finFecha" class="form-control" style="font-size:13px; padding:5px 8px;">
-                </div>
-            </div>
-            <button class="btn btn-success" onclick="agregarMovimiento()" style="width:100%; font-size:13px; padding:6px;">✅ Agregar</button>
-        </div>
+    
+    <div id="vista-historial" class="view">
+      <div class="card" style="text-align:center;"><div style="font-size:2rem;">📋</div><div class="card-header">Historial</div>
+        <button class="btn btn-outline" style="width:100%;" onclick="verVentas('TEC')">🏛️ Ventas TEC</button>
+        <button class="btn btn-outline" style="width:100%;margin-top:5px;" onclick="verVentas('MILENIO')">🎓 Ventas MILENIO</button>
+        <button class="btn btn-outline" style="width:100%;margin-top:5px;" onclick="descargarActual()">📥 Descargar Excel</button></div>
+      <div class="card" id="card-ventas" style="display:none;"><div class="card-header" id="titulo-ventas">📊 Transacciones</div><div id="tabla-ventas" style="font-size:0.7rem;"></div></div>
+      <div class="card"><div class="card-header">📁 Archivos anteriores</div><div id="lista-archivos">...</div></div>
     </div>
+  </div>
 
-    <!-- ===== ADMIN ===== -->
-    <div id="admin" class="content">
-        <div class="card">
-            <div class="card-title">📊 Resumen del periodo</div>
-            <div id="resumenPeriodo" class="resumen-periodo"></div>
-            <button class="btn btn-danger" onclick="cerrarPeriodo()" style="width:100%; font-size:13px; padding:8px;">🔒 CERRAR PERIODO</button>
-            <p style="font-size:11px; color:#666; margin-top:6px; text-align:center;">⚠️ Se guardará el resumen y se creará uno nuevo en blanco.</p>
-        </div>
-        <div class="card">
-            <div class="card-title">📂 Períodos anteriores</div>
-            <div id="historialPeriodos" class="historial-periodos"></div>
-        </div>
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-productos" onclick="cambiarVista('productos')"><span class="badge" id="badge-criticos">0</span><span class="nav-icon">📦</span>Productos</div>
+    <div class="nav-item" id="nav-vender" onclick="cambiarVista('vender')"><span class="nav-icon">💳</span>Vender</div>
+    <div class="nav-item" id="nav-historial" onclick="cambiarVista('historial')"><span class="nav-icon">📋</span>Historial</div>
+  </nav>
+</div>
+
+<div id="scanner-modal"><div id="scanner-viewport"></div><button id="close-scanner" onclick="cerrarEscaner()">✕</button></div>
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modal-pago">
+  <div class="modal-box">
+    <div class="modal-icon">💳</div>
+    <div class="modal-title">Tipo de pago</div>
+    <div class="payment-options" id="payment-options">
+      <div class="payment-btn selected" onclick="seleccionarPago(this,'Tarjeta Crédito')">💳 Crédito</div>
+      <div class="payment-btn" onclick="seleccionarPago(this,'Tarjeta Débito')">💳 Débito</div>
+      <div class="payment-btn" onclick="seleccionarPago(this,'Efectivo')">💵 Efectivo</div>
+      <div class="payment-btn" onclick="seleccionarPago(this,'CECO')">🏷️ CECO</div>
+      <div class="payment-btn" onclick="seleccionarPago(this,'Nomina')">💼 Nómina (-10%)</div>
     </div>
+    <div class="modal-buttons"><button class="btn btn-outline" onclick="cerrarModalPago()">Cancelar</button><button class="btn btn-primary" onclick="siguientePaso()">Siguiente →</button></div>
+  </div>
+</div>
 
-    <!-- ===== MODALES ===== -->
-    <div id="modalParticipante" class="modal-overlay">
-        <div class="modal">
-            <button class="modal-close" onclick="cerrarModal()">✕</button>
-            <h2 id="modalTitle">Editar participante</h2>
-            <div id="modalContent"></div>
-        </div>
-    </div>
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal-box">
+    <div class="modal-icon">✅</div>
+    <div class="modal-title" id="modal-titulo-confirm">Confirmar cobro</div>
+    <div class="modal-subtitle" id="modal-resumen"></div>
+    <div class="modal-buttons"><button class="btn btn-outline" onclick="cerrarModalConfirm()">Cancelar</button><button class="btn btn-primary" onclick="ejecutarCobro()">💳 Confirmar cobro</button></div>
+  </div>
+</div>
 
-    <div id="modalAgregar" class="modal-overlay">
-        <div class="modal">
-            <button class="modal-close" onclick="cerrarModalAgregar()">✕</button>
-            <h2>➕ Agregar participante</h2>
-            <div class="form-group">
-                <label>Nombre completo</label>
-                <input type="text" id="nuevoNombre" class="form-control" placeholder="Ej: Juan Pérez">
-            </div>
-            <button class="btn btn-success" onclick="agregarParticipante()" style="width:100%;">✅ Agregar</button>
-        </div>
-    </div>
+<script>
+const URL_API = "https://script.google.com/macros/s/AKfycbz4AXMDHKx6NEi6eveNnVCeRLqoFqAaA-N2ctzJO3xCE6qlZPKB_EtblZurORqONthJzQ/exec";
+let productos = [];
+let carrito = [];
+let scanner = null;
+let codigoEdicion = '';
+let usuarioActual = '';
+let tipoPagoSeleccionado = 'Tarjeta Crédito';
+let modoDevolucion = false;
 
-    <div id="modalEditarMovimiento" class="modal-overlay">
-        <div class="modal">
-            <button class="modal-close" onclick="cerrarModalEditarMovimiento()">✕</button>
-            <h2>✏️ Editar movimiento</h2>
-            <div id="modalEditarMovimientoContent"></div>
-        </div>
-    </div>
+window.onload = function() {
+  usuarioActual = localStorage.getItem('store_usuario') || '';
+  if (usuarioActual) { mostrarApp(); cargarProductos(); }
+};
 
-    <div id="modalMontos" class="modal-overlay">
-        <div class="modal">
-            <button class="modal-close" onclick="cerrarModalMontos()">✕</button>
-            <h2>💰 Actualizar montos</h2>
-            <div class="form-group">
-                <label>Inscripción ($)</label>
-                <input type="number" id="montoInscripcion" class="form-control" step="1">
-            </div>
-            <div class="form-group">
-                <label>Compendio ($)</label>
-                <input type="number" id="montoCompendio" class="form-control" step="1">
-            </div>
-            <div class="form-group">
-                <label>Crucifijo ($)</label>
-                <input type="number" id="montoCrucifijo" class="form-control" step="1">
-            </div>
-            <button class="btn btn-primary" onclick="guardarMontos()" style="width:100%;">💾 Guardar montos</button>
-        </div>
-    </div>
+function guardarUsuario() {
+  let nombre = document.getElementById('input-nombre-usuario').value.trim();
+  if (!nombre) return mostrarToast('Escribe tu nombre');
+  localStorage.setItem('store_usuario', nombre);
+  usuarioActual = nombre;
+  mostrarApp();
+  cargarProductos();
+}
 
-    <script>
-        // ============================================
-        // CONFIGURACIÓN - URL DE LA API (SOLO GET)
-        // ============================================
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzOGZoRNVaWfADgb0Wu0EwWVsuCQLdJ4gDtVCnwIpxZmJcwE5jHst9_EkhUuMe2sGw7/exec';
+function mostrarApp() {
+  document.getElementById('vista-bienvenida').classList.remove('active');
+  document.getElementById('vista-app').classList.add('active');
+  document.getElementById('nombre-usuario-header').textContent = usuarioActual;
+}
 
-        let data = null;
-        let filtroFinanzasActual = 'todos';
-        let participanteEditando = null;
-        let movimientoEditando = null;
-        let cargando = false;
+function requiereUsuario() { if(!usuarioActual){ mostrarToast('⚠️ Selecciona un usuario'); return false; } return true; }
+function mostrarToast(m) { let t = document.getElementById('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2200); }
 
-        // ============================================
-        // API - SOLO GET (SIN CORS, SIN POST)
-        // ============================================
-        async function fetchData() {
-            try {
-                const url = API_URL + '?action=getData';
-                console.log('📤 GET:', url);
-                const response = await fetch(url);
-                const result = await response.json();
-                console.log('📥 Respuesta:', result);
-                return result;
-            } catch (e) {
-                console.error('Error en fetchData:', e);
-                return null;
-            }
-        }
+function cambiarVista(v) {
+  document.querySelectorAll('#vista-app .view').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+  document.getElementById('vista-' + v).classList.add('active');
+  document.getElementById('nav-' + v).classList.add('active');
+  if (v === 'productos') cargarProductos();
+  if (v === 'vender') renderizarCarrito();
+  if (v === 'historial') cargarArchivos();
+}
 
-        async function sendData(action, data) {
-            try {
-                const params = new URLSearchParams();
-                params.append('action', action);
-                params.append('data', JSON.stringify(data));
-                const url = API_URL + '?' + params.toString();
-                console.log('📤 GET (acción):', url);
-                const response = await fetch(url);
-                const result = await response.json();
-                console.log('📥 Respuesta:', result);
-                return result;
-            } catch (e) {
-                console.error('Error en sendData:', e);
-                return { success: false, error: e.message };
-            }
-        }
+function toggleMenu() { document.getElementById('menu-dropdown').classList.toggle('show'); }
+document.addEventListener('click', function(e) { if (!e.target.closest('.menu-container')) document.getElementById('menu-dropdown').classList.remove('show'); });
 
-        // ============================================
-        // CARGA DE DATOS
-        // ============================================
-        async function cargarDatos() {
-            if (cargando) return;
-            cargando = true;
-            mostrarLoading(true);
+function toggleDevolucion() {
+  modoDevolucion = document.getElementById('modo-devolucion').checked;
+  document.getElementById('devolucion-options').style.display = modoDevolucion ? 'block' : 'none';
+  let btn = document.getElementById('btn-accion-principal');
+  if (modoDevolucion) { btn.textContent = '🔄 Devolver'; btn.onclick = devolver; }
+  else { btn.textContent = '💳 Cobrar'; btn.onclick = cobrar; }
+}
 
-            const result = await fetchData();
-            mostrarLoading(false);
-            cargando = false;
+function cargarProductos() {
+  fetch(URL_API).then(r => r.json()).then(d => { productos = d; renderizarProductos(d); actualizarBadge(d); })
+    .catch(() => document.getElementById('lista-productos').innerHTML = '<p style="color:#D64545">Error</p>');
+}
 
-            if (result && result.success) {
-                data = result.data;
-                if (!data.finanzas) data.finanzas = [];
-                if (!data.historial) data.historial = [];
-                return true;
-            } else {
-                alert('❌ Error al cargar datos: ' + (result?.error || ''));
-                return false;
-            }
-        }
+function actualizarBadge(arr) {
+  let criticos = arr.filter(p => Number(p.stock) <= 1).length;
+  let badge = document.getElementById('badge-criticos');
+  badge.textContent = criticos;
+  badge.style.display = criticos > 0 ? 'block' : 'none';
+}
 
-        async function recargarDatos() {
-            await cargarDatos();
-            renderizarTodo();
-        }
+function renderizarProductos(arr) {
+  let c = document.getElementById('lista-productos');
+  if (!arr.length) { c.innerHTML = '<div class="empty-state">📭 Sin productos</div>'; return; }
+  let ordenados = [...arr].sort((a, b) => Number(a.stock) <= 1 ? -1 : 1);
+  c.innerHTML = ordenados.map(p => {
+    let stock = Number(p.stock), precio = Number(p.precio);
+    let dotClass = stock <= 1 ? 'critical' : (stock <= 5 ? 'low' : 'normal');
+    let stockText = stock <= 1 ? '⚠️ ' + stock : stock;
+    return `<div class="product-item${stock <= 1 ? ' critical' : ''}" onclick="editarProducto('${p.id}')">
+      <div class="product-main"><div class="product-id">${p.id}</div><div class="product-name">${p.descripcion}</div>
+        <div class="product-meta"><span class="product-cat">${p.categoria||'TEC'}</span><span class="product-stock"><span class="stock-dot ${dotClass}"></span>${stockText} pzas</span></div>
+      </div><div class="product-price">$${precio.toFixed(2)}</div><span class="product-edit-icon">✏️</span></div>`;
+  }).join('');
+}
 
-        function mostrarLoading(show) {
-            document.getElementById('loadingOverlay').classList.toggle('active', show);
-        }
+document.getElementById('busqueda-producto').addEventListener('input', function() {
+  let txt = this.value.trim();
+  if (!txt) { renderizarProductos(productos); document.getElementById('card-edicion-existente').style.display = 'none'; return; }
+  let esCodigo = /^\d+$/.test(txt);
+  let filtrados = esCodigo ? productos.filter(p => p.id === txt) : productos.filter(p => p.descripcion.toLowerCase().includes(txt.toLowerCase()));
+  renderizarProductos(filtrados);
+});
 
-        // ============================================
-        // RENDERIZADO
-        // ============================================
-        function renderizarTodo() {
-            if (!data) return;
-            renderizarParticipantes();
-            renderizarResumen();
-            renderizarFinanzas();
-            renderizarResumenFinanzas();
-            renderizarAdmin();
-        }
+function editarProducto(id) {
+  let exacto = productos.find(p => p.id === id);
+  if (!exacto || !requiereUsuario()) return;
+  codigoEdicion = exacto.id;
+  document.getElementById('card-edicion-existente').style.display = 'block';
+  document.getElementById('titulo-edicion-existente').textContent = exacto.descripcion;
+  document.getElementById('edit-id-desc-existente').value = exacto.id + ' - ' + exacto.descripcion;
+  document.getElementById('stock-actual-existente').textContent = Number(exacto.stock) + ' pzas';
+  document.getElementById('edit-precio-existente').value = Number(exacto.precio);
+  document.getElementById('edit-precio-existente').disabled = true;
+  document.getElementById('edit-categoria-existente').value = exacto.categoria || 'TEC';
+  document.getElementById('edit-stock-existente').value = '';
+}
 
-        function renderizarParticipantes() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const list = document.getElementById('participantList');
-            const filtrados = data.participantes.filter(p => p.nombre.toLowerCase().includes(searchTerm));
-            if (filtrados.length === 0) { list.innerHTML = '<div class="empty-state">No hay participantes</div>'; return; }
-            list.innerHTML = filtrados.map(p => {
-                const statusClass = p.activo ? '' : 'inactive';
-                const statusIcon = p.activo ? '' : '<span class="status-icon inactivo-icon">⛔</span>';
-                return `<div class="participant-item ${statusClass}" onclick="editarParticipante('${p.nombre}')">
-                    <span class="participant-name">${p.nombre}</span>
-                    <div class="participant-status">
-                        ${statusIcon}
-                        <span class="status-icon ${p.pagos.inscripcion.pagado ? 'pagado' : 'pendiente'}">${p.pagos.inscripcion.pagado ? '✓' : '✗'}</span>
-                        <span class="status-icon ${p.pagos.compendio.pagado ? 'pagado' : 'pendiente'}">${p.pagos.compendio.pagado ? '✓' : '✗'}</span>
-                        <span class="status-icon ${p.pagos.crucifijo.pagado ? 'pagado' : 'pendiente'}">${p.pagos.crucifijo.pagado ? '✓' : '✗'}</span>
-                    </div>
-                </div>`;
-            }).join('');
-        }
+function habilitarPrecio() { document.getElementById('edit-precio-existente').disabled = false; document.getElementById('edit-precio-existente').focus(); }
 
-        function renderizarResumen() {
-            const activos = data.participantes.filter(p => p.activo);
-            const inactivos = data.participantes.filter(p => !p.activo);
-            const total = activos.length;
-            const pagadosInsc = activos.filter(p => p.pagos.inscripcion.pagado).length;
-            const pagadosComp = activos.filter(p => p.pagos.compendio.pagado).length;
-            const pagadosCruc = activos.filter(p => p.pagos.crucifijo.pagado).length;
-            document.getElementById('summaryContent').innerHTML = `
-                <div style="text-align:center; font-size:12px; margin-bottom:3px;">👥 Total: ${data.participantes.length} (${inactivos.length} inactivos)</div>
-                <div class="summary-grid">
-                    <div class="summary-item"><div class="label">📝 Inscripción</div><div class="value">${pagadosInsc}/${total}</div></div>
-                    <div class="summary-item"><div class="label">📚 Compendio</div><div class="value">${pagadosComp}/${total}</div></div>
-                    <div class="summary-item"><div class="label">✝️ Crucifijo</div><div class="value">${pagadosCruc}/${total}</div></div>
-                </div>
-            `;
-        }
+function guardarCambios() {
+  let precio = parseFloat(document.getElementById('edit-precio-existente').value) || 0;
+  let stock = parseInt(document.getElementById('edit-stock-existente').value) || 0;
+  let cat = document.getElementById('edit-categoria-existente').value;
+  let existente = productos.find(p => p.id === codigoEdicion);
+  let desc = document.getElementById('titulo-edicion-existente').textContent;
+  let precioCambio = (precio !== Number(existente.precio));
+  let stockCambio = (stock > 0);
+  if (!precioCambio && !stockCambio) return mostrarToast('No hay cambios');
+  let stockFinal = stockCambio ? Number(existente.stock) + stock : Number(existente.stock);
+  fetch(URL_API, { method: 'POST', body: JSON.stringify({ accion: 'guardar_producto', registradoPor: usuarioActual, datos: { id: codigoEdicion, descripcion: desc, precio, stock: stockFinal, categoria: cat, stockMinimo: 5 } })})
+  .then(() => {
+    mostrarToast(precioCambio && stockCambio ? '✅ Precio e inventario actualizados' : (precioCambio ? '✅ Precio actualizado' : '✅ Inventario actualizado'));
+    document.getElementById('edit-precio-existente').disabled = true;
+    document.getElementById('edit-stock-existente').value = '';
+    document.getElementById('stock-actual-existente').textContent = stockFinal + ' pzas';
+    cargarProductos();
+  });
+}
 
-        // ============================================
-        // FINANZAS
-        // ============================================
-        function renderizarFinanzas() {
-            const list = document.getElementById('finanzasList');
-            let movimientos = [];
-            if (filtroFinanzasActual === 'todos') {
-                movimientos = data.finanzas || [];
-            } else if (filtroFinanzasActual === 'ingreso') {
-                movimientos = (data.finanzas || []).filter(m => m.tipo === 'ingreso');
-            } else if (filtroFinanzasActual === 'gasto') {
-                movimientos = (data.finanzas || []).filter(m => m.tipo === 'gasto');
-            } else {
-                // Filtro por concepto (inscripcion, compendio, crucifijo)
-                movimientos = [];
-                data.participantes.forEach(p => {
-                    const conceptos = ['inscripcion', 'compendio', 'crucifijo'];
-                    conceptos.forEach(concepto => {
-                        if (concepto === filtroFinanzasActual) {
-                            const pago = p.pagos[concepto];
-                            if (pago && pago.pagado && pago.fecha) {
-                                const monto = data.config[`monto${concepto.charAt(0).toUpperCase() + concepto.slice(1)}`] || 0;
-                                movimientos.push({
-                                    id: `pago_${p.id}_${concepto}`,
-                                    fecha: pago.fecha,
-                                    tipo: 'ingreso',
-                                    concepto: `${p.nombre} - ${concepto.charAt(0).toUpperCase() + concepto.slice(1)}`,
-                                    monto: monto,
-                                    esPago: true
-                                });
-                            }
-                        }
-                    });
-                });
-            }
-            movimientos.sort((a, b) => b.fecha.localeCompare(a.fecha));
-            if (movimientos.length === 0) { list.innerHTML = '<div class="empty-state">No hay movimientos</div>'; return; }
-            list.innerHTML = movimientos.map(m => {
-                const signo = m.tipo === 'ingreso' ? '+' : '-';
-                const clase = m.tipo === 'ingreso' ? 'ingreso' : 'gasto';
-                const acciones = m.esPago ? '' : `
-                    <button class="btn-accion btn-editar" onclick="abrirModalEditarMovimiento('${m.id}')" title="Editar">✏️</button>
-                    <button class="btn-accion btn-eliminar" onclick="eliminarMovimiento('${m.id}')" title="Eliminar">🗑️</button>
-                `;
-                return `<div class="movimiento-item">
-                    <span class="fecha">${formatearFecha(m.fecha)}</span>
-                    <span class="concepto">${m.concepto}</span>
-                    <span class="monto ${clase}">${signo}$${m.monto.toFixed(2)}</span>
-                    ${acciones}
-                </div>`;
-            }).join('');
-        }
+function cancelarEdicion() {
+  document.getElementById('card-edicion-existente').style.display = 'none';
+  document.getElementById('busqueda-producto').value = '';
+  renderizarProductos(productos);
+}
 
-        function renderizarResumenFinanzas() {
-            // 1. Cobros de participantes
-            const activos = data.participantes.filter(p => p.activo);
-            const total = activos.length;
-            const pagadosInsc = activos.filter(p => p.pagos.inscripcion.pagado).length;
-            const pagadosComp = activos.filter(p => p.pagos.compendio.pagado).length;
-            const pagadosCruc = activos.filter(p => p.pagos.crucifijo.pagado).length;
-            
-            const totalInsc = pagadosInsc * data.config.montoInscripcion;
-            const totalComp = pagadosComp * data.config.montoCompendio;
-            const totalCruc = pagadosCruc * data.config.montoCrucifijo;
+function abrirEscaner(ctx) {
+  document.getElementById('scanner-modal').style.display = 'flex';
+  scanner = new Html5Qrcode("scanner-viewport");
+  scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: { width: 300, height: 200 } },
+    (txt) => { 
+      if (navigator.vibrate) navigator.vibrate(80); 
+      cerrarEscaner();
+      if (ctx === 'productos') {
+        document.getElementById('busqueda-producto').value = txt;
+        document.getElementById('busqueda-producto').dispatchEvent(new Event('input'));
+      } else {
+        document.getElementById('input-codigo-vender').value = txt;
+        agregarAlCarrito();
+      }
+    }, () => {});
+}
+function cerrarEscaner() { 
+  if (scanner) scanner.stop().then(() => document.getElementById('scanner-modal').style.display = 'none');
+  else document.getElementById('scanner-modal').style.display = 'none';
+}
 
-            // 2. Ingresos/Gastos manuales
-            const finanzas = data.finanzas || [];
-            const ingresosManuales = finanzas.filter(m => m.tipo === 'ingreso').reduce((sum, m) => sum + m.monto, 0);
-            const gastosManuales = finanzas.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + m.monto, 0);
+function agregarRapido(id) {
+  let p = productos.find(x=>x.id===id);
+  if(!p) return mostrarToast('Producto no encontrado');
+  if (modoDevolucion) {
+    let existe = carrito.find(x=>x.id===id && x.devolucion);
+    if(existe) existe.cantidad++; else carrito.push({id,descripcion:p.descripcion,cantidad:1,precio:Number(p.precio),categoria:p.categoria||'TEC',devolucion:true});
+  } else {
+    let existe = carrito.find(x=>x.id===id && !x.devolucion);
+    if(existe) { let stockDisp = Number(p.stock); if(existe.cantidad >= stockDisp) return mostrarToast(stockDisp<=1?'⚠️ ¡Última pieza!':'⚠️ Stock máximo: '+stockDisp); existe.cantidad++; }
+    else carrito.push({id,descripcion:p.descripcion,cantidad:1,precio:Number(p.precio),categoria:p.categoria||'TEC',devolucion:false});
+  }
+  renderizarCarrito();
+}
 
-            // 3. Totales
-            const totalIngresos = totalComp + totalCruc + ingresosManuales;
-            const totalGastos = gastosManuales;
-            const disponible = totalIngresos - totalGastos;
+function agregarAlCarrito() {
+  let cod = document.getElementById('input-codigo-vender').value.trim();
+  if(!cod) return mostrarToast('Código requerido');
+  let p = productos.find(x=>x.id===cod);
+  if(!p) return mostrarToast('❌ Producto no encontrado');
+  if (modoDevolucion) {
+    let existe = carrito.find(x=>x.id===cod && x.devolucion);
+    if(existe) existe.cantidad++; else carrito.push({id:cod,descripcion:p.descripcion,cantidad:1,precio:Number(p.precio),categoria:p.categoria||'TEC',devolucion:true});
+  } else {
+    let existe = carrito.find(x=>x.id===cod && !x.devolucion);
+    if(existe) { let stockDisp = Number(p.stock); if(existe.cantidad >= stockDisp) return mostrarToast(stockDisp<=1?'⚠️ ¡Última pieza!':'⚠️ Stock máximo: '+stockDisp); existe.cantidad++; }
+    else carrito.push({id:cod,descripcion:p.descripcion,cantidad:1,precio:Number(p.precio),categoria:p.categoria||'TEC',devolucion:false});
+  }
+  document.getElementById('input-codigo-vender').value=''; renderizarCarrito();
+}
 
-            // 4. Mostrar en la interfaz
-            document.getElementById('totalIngresos').textContent = `$${totalIngresos.toFixed(2)}`;
-            document.getElementById('totalGastos').textContent = `$${totalGastos.toFixed(2)}`;
-            document.getElementById('totalSaldo').textContent = `$${disponible.toFixed(2)}`;
+function cambiarCantidad(id, d) {
+  let item = carrito.find(x=>x.id===id); if(!item) return;
+  if (!item.devolucion) { let producto = productos.find(p=>p.id===id); let stockDisp = producto?Number(producto.stock):0; if(d>0 && item.cantidad>=stockDisp) return mostrarToast(stockDisp<=1?'⚠️ ¡Última pieza!':'⚠️ Stock máximo: '+stockDisp); }
+  item.cantidad+=d; if(item.cantidad<=0) carrito=carrito.filter(x=>x.id!==id); renderizarCarrito();
+}
 
-            // 5. Mostrar resumen de cobros (igual que en Admin)
-            const resumenHTML = `
-                <div class="item">
-                    <div class="label">📝 Inscripción</div>
-                    <div class="value" style="color:#e67e22;">${pagadosInsc}/${total}</div>
-                    <div class="sub">$${totalInsc.toFixed(2)}</div>
-                </div>
-                <div class="item">
-                    <div class="label">📚 Compendio</div>
-                    <div class="value" style="color:#27ae60;">${pagadosComp}/${total}</div>
-                    <div class="sub">$${totalComp.toFixed(2)}</div>
-                </div>
-                <div class="item">
-                    <div class="label">✝️ Crucifijo</div>
-                    <div class="value" style="color:#8e44ad;">${pagadosCruc}/${total}</div>
-                    <div class="sub">$${totalCruc.toFixed(2)}</div>
-                </div>
-            `;
-            document.getElementById('resumenCobrosFinanzas').innerHTML = resumenHTML;
+function editarCantidad(id, el) {
+  let item = carrito.find(x=>x.id===id); let v = parseInt(el.value); if(isNaN(v)||v<=0){el.value=item.cantidad;return;}
+  if (!item.devolucion) { let producto = productos.find(p=>p.id===id); let stockDisp = producto?Number(producto.stock):0; if(v>stockDisp){ mostrarToast(stockDisp<=1?'⚠️ ¡Última pieza!':'⚠️ Solo hay '+stockDisp); el.value=stockDisp; v=stockDisp; } }
+  item.cantidad=v; renderizarCarrito();
+}
 
-            // 6. Resaltar filtro activo
-            document.querySelectorAll('.finanzas-resumen .item').forEach(item => {
-                const filtro = item.dataset.filtro;
-                item.classList.toggle('active', filtro === filtroFinanzasActual);
-            });
-            
-            document.querySelectorAll('.filtro-btn').forEach(btn => {
-                const filtro = btn.dataset.filtro;
-                btn.classList.toggle('active', filtro === filtroFinanzasActual);
-            });
-        }
+function eliminarItem(id) { carrito = carrito.filter(x=>x.id!==id); renderizarCarrito(); }
 
-        function filtrarFinanzas(tipo) {
-            filtroFinanzasActual = tipo;
-            
-            document.querySelectorAll('.filtro-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.filtro === tipo);
-            });
-            
-            renderizarFinanzas();
-            renderizarResumenFinanzas();
-        }
+function renderizarCarrito() {
+  let c=document.getElementById('lista-carrito'), ta=0, tm=0;
+  if(!carrito.length){ c.innerHTML='<div class="empty-state">🛒 Vacío</div>'; document.getElementById('total-articulos').textContent='📦 0 artículos'; document.getElementById('total-monto').textContent='$0'; document.getElementById('tipo-pago-display').textContent=''; document.getElementById('descuento-display').style.display='none'; return; }
+  let tec = carrito.filter(x=>x.categoria==='TEC'), mil = carrito.filter(x=>x.categoria==='MILENIO');
+  let html = '', mostrarCategorias = tec.length > 0 && mil.length > 0;
+  function renderGrupo(items, titulo, emoji) {
+    let h = '', subt = 0;
+    if (mostrarCategorias && items.length > 0) h += `<div class="cart-category-header">${emoji} ${titulo}</div>`;
+    items.forEach(item => { let sub = item.cantidad * Number(item.precio); subt += sub; ta += item.cantidad; tm += sub;
+      h += `<div class="cart-item"><div class="cart-info"><div class="cart-id">${item.id}${item.devolucion?' 🔄':''}</div><div class="cart-name">${item.descripcion}</div><div class="cart-unit">$${Number(item.precio).toFixed(2)} c/u</div></div><div class="cart-controls"><button class="btn btn-outline btn-sm" onclick="cambiarCantidad('${item.id}',-1)">−</button><input class="cart-qty" value="${item.cantidad}" onchange="editarCantidad('${item.id}',this)"><button class="btn btn-outline btn-sm" onclick="cambiarCantidad('${item.id}',1)">+</button></div><div class="cart-subtotal">$${sub.toFixed(2)}</div><button class="btn-delete" onclick="eliminarItem('${item.id}')">✕</button></div>`;
+    });
+    if (mostrarCategorias && items.length > 0) h += `<div class="cart-category-subtotal">Subtotal ${titulo}: $${subt.toFixed(2)}</div>`;
+    return h;
+  }
+  html += renderGrupo(tec, 'Tec de Monterrey', '🏛️'); html += renderGrupo(mil, 'Tec Milenio', '🎓');
+  c.innerHTML = html;
+  document.getElementById('total-articulos').textContent = `📦 ${ta} artículos`;
+  document.getElementById('total-monto').textContent = `$${Math.abs(tm).toFixed(2)}`;
+  actualizarTotales();
+}
 
-        // ============================================
-        // ADMIN
-        // ============================================
-        function renderizarAdmin() {
-            const activos = data.participantes.filter(p => p.activo);
-            const total = activos.length;
-            const pagadosInsc = activos.filter(p => p.pagos.inscripcion.pagado).length;
-            const pagadosComp = activos.filter(p => p.pagos.compendio.pagado).length;
-            const pagadosCruc = activos.filter(p => p.pagos.crucifijo.pagado).length;
-            const totalInsc = pagadosInsc * data.config.montoInscripcion;
-            const totalComp = pagadosComp * data.config.montoCompendio;
-            const totalCruc = pagadosCruc * data.config.montoCrucifijo;
-            const totalGeneral = totalInsc + totalComp + totalCruc;
-            const finanzas = data.finanzas || [];
-            const totalIngresosManual = finanzas.filter(m => m.tipo === 'ingreso').reduce((sum, m) => sum + m.monto, 0);
-            const totalGastosManual = finanzas.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + m.monto, 0);
-            const disponible = totalComp + totalCruc + totalIngresosManual - totalGastosManual;
-            
-            document.getElementById('resumenPeriodo').innerHTML = `
-                <div class="linea"><span>👥 Participantes activos</span><span>${total}</span></div>
-                <div class="linea"><span>📝 Inscripción (${pagadosInsc}/${total})</span><span>$${totalInsc.toFixed(2)}</span></div>
-                <div class="linea"><span>📚 Compendio (${pagadosComp}/${total})</span><span>$${totalComp.toFixed(2)}</span></div>
-                <div class="linea"><span>✝️ Crucifijo (${pagadosCruc}/${total})</span><span>$${totalCruc.toFixed(2)}</span></div>
-                <div class="linea"><span>💰 Total recaudado</span><span>$${totalGeneral.toFixed(2)}</span></div>
-                <div class="linea"><span>📊 Ingresos adicionales</span><span>$${totalIngresosManual.toFixed(2)}</span></div>
-                <div class="linea"><span>💸 Gastos</span><span>$${totalGastosManual.toFixed(2)}</span></div>
-                <div class="linea" style="font-weight:bold; font-size:14px; border-top:2px solid #2c3e50; margin-top:6px; padding-top:6px; border-bottom:none; color:#27ae60;"><span>📈 Disponible</span><span>$${disponible.toFixed(2)}</span></div>
-            `;
-            const historial = data.historial || [];
-            const list = document.getElementById('historialPeriodos');
-            if (historial.length === 0) { list.innerHTML = '<div class="empty-state">No hay períodos cerrados</div>'; return; }
-            list.innerHTML = historial.map(h => `<div class="periodo-item"><div><strong>${h.nombre}</strong><span class="total">$${h.total.toFixed(2)}</span></div><div style="color:#666; font-size:11px;">Cerrado: ${formatearFecha(h.fechaCierre)}</div></div>`).join('');
-        }
+function seleccionarPago(el, tipo) {
+  document.querySelectorAll('#payment-options .payment-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  tipoPagoSeleccionado = tipo;
+}
 
-        // ============================================
-        // ACCIONES - PARTICIPANTES
-        // ============================================
-        async function togglePago(nombre, concepto) {
-            const participante = data.participantes.find(p => p.nombre === nombre);
-            if (!participante) return;
-            const pago = participante.pagos[concepto];
-            pago.pagado = !pago.pagado;
-            pago.fecha = pago.pagado ? obtenerFechaActual() : null;
+function actualizarTotales() {
+  let total = parseFloat(document.getElementById('total-monto').textContent.replace('$','')) || 0;
+  let display = document.getElementById('tipo-pago-display');
+  let descDisplay = document.getElementById('descuento-display');
+  if (total > 0) {
+    display.textContent = '💳 ' + tipoPagoSeleccionado;
+    if (tipoPagoSeleccionado === 'Nomina') { descDisplay.style.display = 'block'; descDisplay.textContent = 'Nómina (-10%): $' + (total * 0.9).toFixed(2); }
+    else { descDisplay.style.display = 'none'; }
+  }
+}
 
-            mostrarLoading(true);
-            const result = await sendData('updatePago', { nombre, concepto, pagado: pago.pagado, fecha: pago.fecha });
-            mostrarLoading(false);
+function cobrar() {
+  if(!carrito.length) return mostrarToast('Vacío');
+  if(!requiereUsuario()) return;
+  document.getElementById('modal-pago').style.display = 'flex';
+}
 
-            if (result && result.success) {
-                await recargarDatos();
-            } else {
-                alert('❌ Error al actualizar: ' + (result?.error || 'desconocido'));
-            }
-            if (participanteEditando === nombre) editarParticipante(nombre);
-        }
+function cerrarModalPago() { document.getElementById('modal-pago').style.display = 'none'; }
 
-        async function toggleActivo(nombre) {
-            const participante = data.participantes.find(p => p.nombre === nombre);
-            if (!participante) return;
-            participante.activo = !participante.activo;
-            mostrarLoading(true);
-            const result = await sendData('updateActivo', { nombre, activo: participante.activo });
-            mostrarLoading(false);
-            if (result && result.success) {
-                await recargarDatos();
-            } else {
-                alert('❌ Error al actualizar: ' + (result?.error || 'desconocido'));
-            }
-            if (participanteEditando === nombre) editarParticipante(nombre);
-        }
+function siguientePaso() {
+  cerrarModalPago();
+  let total = parseFloat(document.getElementById('total-monto').textContent.replace('$','')) || 0;
+  let descuento = tipoPagoSeleccionado === 'Nomina' ? total * 0.9 : total;
+  let resumen = `Total: $${total.toFixed(2)}<br>Tipo: ${tipoPagoSeleccionado}`;
+  if (tipoPagoSeleccionado === 'Nomina') resumen += `<br><span style="color:var(--accent);font-weight:600;">Nómina (-10%): $${descuento.toFixed(2)}</span>`;
+  document.getElementById('modal-resumen').innerHTML = resumen;
+  document.getElementById('modal-confirm').style.display = 'flex';
+}
 
-        async function agregarParticipante() {
-            const nombre = document.getElementById('nuevoNombre').value.trim();
-            if (!nombre) { alert('Escribe un nombre'); return; }
-            mostrarLoading(true);
-            const result = await sendData('addParticipante', { nombre });
-            mostrarLoading(false);
-            if (result && result.success) {
-                await recargarDatos();
-                cerrarModalAgregar();
-            } else {
-                alert('❌ Error al agregar: ' + (result?.error || 'desconocido'));
-            }
-        }
+function cerrarModalConfirm() { document.getElementById('modal-confirm').style.display = 'none'; }
 
-        function editarParticipante(nombre) {
-            const participante = data.participantes.find(p => p.nombre === nombre);
-            if (!participante) return;
-            participanteEditando = nombre;
-            const modal = document.getElementById('modalParticipante');
-            const content = document.getElementById('modalContent');
-            document.getElementById('modalTitle').textContent = `✏️ Editar: ${participante.nombre}`;
-            content.innerHTML = `
-                <div class="pago-item"><span class="pago-label">📝 Inscripción ($${data.config.montoInscripcion})</span><span class="pago-fecha">${participante.pagos.inscripcion.fecha ? formatearFecha(participante.pagos.inscripcion.fecha) : 'Sin fecha'}</span><button class="btn-toggle ${participante.pagos.inscripcion.pagado ? 'pagado' : 'pendiente'}" onclick="togglePago('${participante.nombre}', 'inscripcion')">${participante.pagos.inscripcion.pagado ? '✅ Pagado' : '❌ Pendiente'}</button></div>
-                <div class="pago-item"><span class="pago-label">📚 Compendio ($${data.config.montoCompendio})</span><span class="pago-fecha">${participante.pagos.compendio.fecha ? formatearFecha(participante.pagos.compendio.fecha) : 'Sin fecha'}</span><button class="btn-toggle ${participante.pagos.compendio.pagado ? 'pagado' : 'pendiente'}" onclick="togglePago('${participante.nombre}', 'compendio')">${participante.pagos.compendio.pagado ? '✅ Pagado' : '❌ Pendiente'}</button></div>
-                <div class="pago-item"><span class="pago-label">✝️ Crucifijo ($${data.config.montoCrucifijo})</span><span class="pago-fecha">${participante.pagos.crucifijo.fecha ? formatearFecha(participante.pagos.crucifijo.fecha) : 'Sin fecha'}</span><button class="btn-toggle ${participante.pagos.crucifijo.pagado ? 'pagado' : 'pendiente'}" onclick="togglePago('${participante.nombre}', 'crucifijo')">${participante.pagos.crucifijo.pagado ? '✅ Pagado' : '❌ Pendiente'}</button></div>
-                <hr style="margin:8px 0;">
-                <div class="pago-item"><span class="pago-label">👤 Estado</span><button class="btn-toggle ${participante.activo ? 'activo' : 'inactivo'}" onclick="toggleActivo('${participante.nombre}')">${participante.activo ? '🟢 Activo' : '🔴 Inactivo'}</button></div>
-            `;
-            modal.classList.add('active');
-        }
+function ejecutarCobro() {
+  cerrarModalConfirm();
+  let carritoCobro = carrito.filter(x => !x.devolucion).map(item => {
+    let precio = tipoPagoSeleccionado === 'Nomina' ? Number(item.precio) * 0.9 : Number(item.precio);
+    return {...item, precio};
+  });
+  let devoluciones = carrito.filter(x => x.devolucion);
+  let body = { accion: 'cobrar', vendedor: usuarioActual, tipoPago: tipoPagoSeleccionado, datos: carritoCobro };
+  if (devoluciones.length > 0) body.devoluciones = devoluciones.map(d => ({...d, motivo: document.getElementById('motivo-devolucion').value}));
+  fetch(URL_API, { method: 'POST', body: JSON.stringify(body) })
+    .then(() => { 
+      mostrarToast('✅ Venta registrada'); 
+      carrito = []; renderizarCarrito(); cargarProductos();
+      tipoPagoSeleccionado = 'Tarjeta Crédito';
+      modoDevolucion = false;
+      document.getElementById('modo-devolucion').checked = false;
+      document.getElementById('devolucion-options').style.display = 'none';
+      document.getElementById('btn-accion-principal').textContent = '💳 Cobrar';
+      document.getElementById('btn-accion-principal').onclick = cobrar;
+      document.querySelectorAll('#payment-options .payment-btn').forEach(b => b.classList.remove('selected'));
+      let firstBtn = document.querySelector('#payment-options .payment-btn');
+      if (firstBtn) firstBtn.classList.add('selected');
+      actualizarTotales();
+    });
+}
 
-        function cerrarModal() { document.getElementById('modalParticipante').classList.remove('active'); participanteEditando = null; }
-        function abrirModalAgregar() { document.getElementById('modalAgregar').classList.add('active'); document.getElementById('nuevoNombre').value = ''; document.getElementById('nuevoNombre').focus(); }
-        function cerrarModalAgregar() { document.getElementById('modalAgregar').classList.remove('active'); }
+function devolver() {
+  if(!carrito.length) return mostrarToast('Vacío');
+  if(!requiereUsuario()) return;
+  let total = document.getElementById('total-monto').textContent.replace('$','');
+  document.getElementById('modal-resumen').innerHTML = 'Total a devolver: $' + total;
+  document.getElementById('modal-titulo-confirm').textContent = 'Confirmar devolución';
+  document.getElementById('modal-confirm').style.display = 'flex';
+}
 
-        // ============================================
-        // ACCIONES - FINANZAS
-        // ============================================
-        async function agregarMovimiento() {
-            const tipo = document.getElementById('finTipo').value;
-            const concepto = document.getElementById('finConcepto').value.trim();
-            const monto = parseFloat(document.getElementById('finMonto').value);
-            const fecha = document.getElementById('finFecha').value;
-            if (!concepto) { alert('Escribe un concepto.'); return; }
-            if (!monto || monto <= 0) { alert('Ingresa un monto válido.'); return; }
-            if (!fecha) { alert('Selecciona una fecha.'); return; }
-            mostrarLoading(true);
-            const result = await sendData('addFinanza', { tipo, concepto, monto, fecha });
-            mostrarLoading(false);
-            if (result && result.success) {
-                await recargarDatos();
-                document.getElementById('finConcepto').value = '';
-                document.getElementById('finMonto').value = '';
-                document.getElementById('finFecha').value = obtenerFechaActual();
-            } else {
-                alert('❌ Error al agregar: ' + (result?.error || 'desconocido'));
-            }
-        }
-
-        async function eliminarMovimiento(id) {
-            if (!confirm('¿Eliminar este movimiento?')) return;
-            mostrarLoading(true);
-            const result = await sendData('deleteFinanza', { id: parseInt(id) });
-            mostrarLoading(false);
-            if (result && result.success) {
-                await recargarDatos();
-            } else {
-                alert('❌ Error al eliminar: ' + (result?.error || 'desconocido'));
-            }
-        }
-
-        function abrirModalEditarMovimiento(id) {
-            const movimiento = data.finanzas.find(m => m.id == id);
-            if (!movimiento) return;
-            movimientoEditando = id;
-            const modal = document.getElementById('modalEditarMovimiento');
-            const content = document.getElementById('modalEditarMovimientoContent');
-            content.innerHTML = `
-                <div class="form-group"><label>Tipo</label><select id="editFinTipo" class="form-control"><option value="ingreso" ${movimiento.tipo === 'ingreso' ? 'selected' : ''}>💰 Ingreso</option><option value="gasto" ${movimiento.tipo === 'gasto' ? 'selected' : ''}>💸 Gasto</option></select></div>
-                <div class="form-group"><label>Concepto</label><input type="text" id="editFinConcepto" class="form-control" value="${movimiento.concepto}"></div>
-                <div class="form-row"><div class="form-group"><label>Monto ($)</label><input type="number" id="editFinMonto" class="form-control" value="${movimiento.monto}" step="0.01"></div><div class="form-group"><label>Fecha</label><input type="date" id="editFinFecha" class="form-control" value="${movimiento.fecha}"></div></div>
-                <button class="btn btn-primary" onclick="guardarEdicionMovimiento()" style="width:100%;">💾 Guardar</button>
-            `;
-            modal.classList.add('active');
-        }
-
-        async function guardarEdicionMovimiento() {
-            const tipo = document.getElementById('editFinTipo').value;
-            const concepto = document.getElementById('editFinConcepto').value.trim();
-            const monto = parseFloat(document.getElementById('editFinMonto').value);
-            const fecha = document.getElementById('editFinFecha').value;
-            if (!concepto) { alert('Escribe un concepto.'); return; }
-            if (!monto || monto <= 0) { alert('Ingresa un monto válido.'); return; }
-            if (!fecha) { alert('Selecciona una fecha.'); return; }
-            mostrarLoading(true);
-            const result = await sendData('updateFinanza', { id: parseInt(movimientoEditando), tipo, concepto, monto, fecha });
-            mostrarLoading(false);
-            if (result && result.success) {
-                await recargarDatos();
-                cerrarModalEditarMovimiento();
-            } else {
-                alert('❌ Error al actualizar: ' + (result?.error || 'desconocido'));
-            }
-        }
-
-        function cerrarModalEditarMovimiento() { document.getElementById('modalEditarMovimiento').classList.remove('active'); movimientoEditando = null; }
-
-        // ============================================
-        // ACCIONES - ADMIN
-        // ============================================
-        async function cerrarPeriodo() {
-            if (!confirm('¿Cerrar el periodo actual?')) return;
-            const activos = data.participantes.filter(p => p.activo);
-            const total = activos.length;
-            const pagadosInsc = activos.filter(p => p.pagos.inscripcion.pagado).length;
-            const pagadosComp = activos.filter(p => p.pagos.compendio.pagado).length;
-            const pagadosCruc = activos.filter(p => p.pagos.crucifijo.pagado).length;
-            const totalInsc = pagadosInsc * data.config.montoInscripcion;
-            const totalComp = pagadosComp * data.config.montoCompendio;
-            const totalCruc = pagadosCruc * data.config.montoCrucifijo;
-            const totalGeneral = totalInsc + totalComp + totalCruc;
-            const finanzas = data.finanzas || [];
-            const totalIngresosManual = finanzas.filter(m => m.tipo === 'ingreso').reduce((sum, m) => sum + m.monto, 0);
-            const totalGastosManual = finanzas.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + m.monto, 0);
-            const totalFinal = totalInsc + totalComp + totalCruc + totalIngresosManual - totalGastosManual;
-            const periodoNombre = `Periodo ${new Date().toLocaleDateString()}`;
-            const fechaCierre = obtenerFechaActual();
-            mostrarLoading(true);
-            const result = await sendData('closePeriod', { nombre: periodoNombre, fechaCierre, total: totalFinal });
-            mostrarLoading(false);
-            if (result && result.success) {
-                await recargarDatos();
-                alert('✅ Periodo cerrado');
-            } else {
-                alert('❌ Error al cerrar: ' + (result?.error || 'desconocido'));
-            }
-        }
-
-        // ============================================
-        // ACCIONES - CONFIGURACIÓN
-        // ============================================
-        function abrirModalMontos() {
-            document.getElementById('montoInscripcion').value = data.config.montoInscripcion;
-            document.getElementById('montoCompendio').value = data.config.montoCompendio;
-            document.getElementById('montoCrucifijo').value = data.config.montoCrucifijo;
-            document.getElementById('modalMontos').classList.add('active');
-        }
-        function cerrarModalMontos() { document.getElementById('modalMontos').classList.remove('active'); }
-
-        async function guardarMontos() {
-            const insc = parseFloat(document.getElementById('montoInscripcion').value);
-            const comp = parseFloat(document.getElementById('montoCompendio').value);
-            const cruc = parseFloat(document.getElementById('montoCrucifijo').value);
-            if (isNaN(insc) || isNaN(comp) || isNaN(cruc)) { alert('Ingresa montos válidos.'); return; }
-            mostrarLoading(true);
-            const result = await sendData('updateMontos', { montoInscripcion: insc, montoCompendio: comp, montoCrucifijo: cruc });
-            mostrarLoading(false);
-            if (result && result.success) {
-                await recargarDatos();
-                cerrarModalMontos();
-                alert('✅ Montos actualizados');
-            } else {
-                alert('❌ Error al actualizar: ' + (result?.error || 'desconocido'));
-            }
-        }
-
-        // ============================================
-        // UTILIDADES
-        // ============================================
-        function obtenerFechaActual() { return new Date().toISOString().split('T')[0]; }
-        
-        function formatearFecha(fecha) {
-            if (!fecha) return 'Sin fecha';
-            // Si la fecha ya viene en formato corto (dd/mm/yyyy), devolverla igual
-            if (fecha.includes('/')) return fecha;
-            // Si viene en formato ISO (yyyy-mm-dd), convertir a dd/mm/yyyy
-            const parts = fecha.split('-');
-            if (parts.length === 3) {
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
-            }
-            // Si es un objeto Date o string raro, intentar convertirlo
-            try {
-                const d = new Date(fecha);
-                if (!isNaN(d.getTime())) {
-                    const day = String(d.getDate()).padStart(2, '0');
-                    const month = String(d.getMonth() + 1).padStart(2, '0');
-                    const year = d.getFullYear();
-                    return `${day}/${month}/${year}`;
-                }
-            } catch(e) {}
-            return fecha;
-        }
-
-        function configurarTabs() {
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-                    this.classList.add('active');
-                    document.getElementById(this.dataset.tab).classList.add('active');
-                    if (this.dataset.tab === 'finanzas') { renderizarFinanzas(); renderizarResumenFinanzas(); }
-                });
-            });
-        }
-        function configurarBusqueda() { document.getElementById('searchInput').addEventListener('input', renderizarParticipantes); }
-        function configurarFechaFinanzas() { document.getElementById('finFecha').value = obtenerFechaActual(); }
-
-        // ============================================
-        // INICIALIZACIÓN
-        // ============================================
-        async function init() {
-            const success = await cargarDatos();
-            if (success) {
-                renderizarTodo();
-                configurarTabs();
-                configurarFechaFinanzas();
-                configurarBusqueda();
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+function cargarArchivos(){ fetch(URL_API+'?obtener=archivos').then(r=>r.json()).then(d=>{ document.getElementById('lista-archivos').innerHTML=d.length?d.map(a=>`<div>📁 ${a}</div>`).join(''):'<p>Sin archivos</p>'; }); }
+function verVentas(cat){ fetch(URL_API+'?obtener=ventas_'+cat).then(r=>r.json()).then(d=>{ document.getElementById('card-ventas').style.display='block'; document.getElementById('titulo-ventas').textContent='📊 '+ (cat==='TEC'?'Tec de Monterrey':'Tec Milenio'); document.getElementById('tabla-ventas').innerHTML=d.length?`<table style="width:100%;font-size:0.7rem;">${d.map(t=>`<tr style="border-bottom:1px solid #eee;"><td>${t.fecha}</td><td>${t.producto}</td><td>${t.cantidad}</td><td>$${t.total}</td><td style="font-size:0.65rem;color:#666;">${t.vendedor||''}</td><td style="font-size:0.6rem;color:#999;">${t.tipoPago||''}</td></tr>`).join('')}</table>`:'<p style="color:#999">Sin ventas</p>'; }); }
+function descargarActual(){ fetch(URL_API,{method:'POST',body:JSON.stringify({accion:'descargar_actual'})}).then(r=>r.json()).then(d=>window.open(d.url,'_blank')); }
+</script>
 </body>
 </html>
