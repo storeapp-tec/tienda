@@ -63,8 +63,8 @@
         .finanzas-resumen .item.active .label { color: rgba(255,255,255,0.8); }
         .finanzas-resumen .label { font-size: 10px; color: #666; }
         .finanzas-resumen .value { font-size: 16px; font-weight: bold; }
-        .filtros-rapidos { display: flex; gap: 5px; flex-wrap: wrap; margin: 8px 0; }
-        .filtro-btn { padding: 4px 12px; border: 1px solid #ddd; border-radius: 16px; background: white; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+        .filtros-rapidos { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+        .filtro-btn { padding: 6px 12px; border: 1px solid #ddd; border-radius: 16px; background: white; font-size: 11px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .filtro-btn.active { border-color: #3498db; background: #3498db; color: white; }
         .movimiento-item { display: flex; align-items: center; padding: 6px 8px; border-bottom: 1px solid #f0f0f0; gap: 6px; font-size: 12px; }
         .movimiento-item .fecha { color: #666; min-width: 65px; }
@@ -86,7 +86,10 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loading-text { color: white; margin-top: 10px; font-size: 13px; }
         .empty-state { text-align: center; padding: 20px 0; color: #999; font-size: 13px; }
-        @media (max-width: 480px) { .summary-grid { grid-template-columns: 1fr; gap: 3px; } .form-row { grid-template-columns: 1fr; } .finanzas-resumen { grid-template-columns: 1fr 1fr 1fr; gap: 4px; } }
+        .resumen-periodo .linea { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .periodo-item { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .periodo-item .total { float: right; font-weight: bold; color: #27ae60; }
+        @media (max-width: 480px) { .summary-grid { grid-template-columns: 1fr; gap: 3px; } .form-row { grid-template-columns: 1fr; } .finanzas-resumen { grid-template-columns: 1fr 1fr 1fr; gap: 4px; } .filtro-btn { font-size: 10px; padding: 4px 8px; } }
     </style>
 </head>
 <body>
@@ -242,7 +245,7 @@
         // ============================================
         // CONFIGURACIÓN - URL DE LA API (SOLO GET)
         // ============================================
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyNxU5DSk-OrfrkgGe0Wpa5O21_64xZoaxBfbExzUx9F_Z9kqXfk5b6M1sM5rqWO8Oi/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzOGZoRNVaWfADgb0Wu0EwWVsuCQLdJ4gDtVCnwIpxZmJcwE5jHst9_EkhUuMe2sGw7/exec';
 
         let data = null;
         let filtroFinanzasActual = 'todos';
@@ -419,104 +422,66 @@
         }
 
         function renderizarResumenFinanzas() {
-    // 1. Cobros de participantes
-    const activos = data.participantes.filter(p => p.activo);
-    const total = activos.length;
-    const pagadosInsc = activos.filter(p => p.pagos.inscripcion.pagado).length;
-    const pagadosComp = activos.filter(p => p.pagos.compendio.pagado).length;
-    const pagadosCruc = activos.filter(p => p.pagos.crucifijo.pagado).length;
-    
-    const totalInsc = pagadosInsc * data.config.montoInscripcion;
-    const totalComp = pagadosComp * data.config.montoCompendio;
-    const totalCruc = pagadosCruc * data.config.montoCrucifijo;
+            // 1. Cobros de participantes
+            const activos = data.participantes.filter(p => p.activo);
+            const total = activos.length;
+            const pagadosInsc = activos.filter(p => p.pagos.inscripcion.pagado).length;
+            const pagadosComp = activos.filter(p => p.pagos.compendio.pagado).length;
+            const pagadosCruc = activos.filter(p => p.pagos.crucifijo.pagado).length;
+            
+            const totalInsc = pagadosInsc * data.config.montoInscripcion;
+            const totalComp = pagadosComp * data.config.montoCompendio;
+            const totalCruc = pagadosCruc * data.config.montoCrucifijo;
 
-    // 2. Ingresos/Gastos manuales (actividades, donativos, compras)
-    const finanzas = data.finanzas || [];
-    const ingresosManuales = finanzas.filter(m => m.tipo === 'ingreso').reduce((sum, m) => sum + m.monto, 0);
-    const gastosManuales = finanzas.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + m.monto, 0);
+            // 2. Ingresos/Gastos manuales
+            const finanzas = data.finanzas || [];
+            const ingresosManuales = finanzas.filter(m => m.tipo === 'ingreso').reduce((sum, m) => sum + m.monto, 0);
+            const gastosManuales = finanzas.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + m.monto, 0);
 
-    // 3. Totales
-    // INGRESOS = Compendios + Crucifijos + Ingresos manuales
-    const totalIngresos = totalComp + totalCruc + ingresosManuales;
-    // GASTOS = Gastos manuales
-    const totalGastos = gastosManuales;
-    // DISPONIBLE = Ingresos - Gastos
-    const disponible = totalIngresos - totalGastos;
+            // 3. Totales
+            const totalIngresos = totalComp + totalCruc + ingresosManuales;
+            const totalGastos = gastosManuales;
+            const disponible = totalIngresos - totalGastos;
 
-    // 4. Mostrar en la interfaz
-    document.getElementById('totalIngresos').textContent = `$${totalIngresos.toFixed(2)}`;
-    document.getElementById('totalGastos').textContent = `$${totalGastos.toFixed(2)}`;
-    document.getElementById('totalSaldo').textContent = `$${disponible.toFixed(2)}`;
+            // 4. Mostrar en la interfaz
+            document.getElementById('totalIngresos').textContent = `$${totalIngresos.toFixed(2)}`;
+            document.getElementById('totalGastos').textContent = `$${totalGastos.toFixed(2)}`;
+            document.getElementById('totalSaldo').textContent = `$${disponible.toFixed(2)}`;
 
-    // 5. Desglose de cobros (igual que en Admin)
-    const resumenHTML = `
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #ddd; text-align:center;">
-            <div>
-                <div style="font-size:10px; color:#666;">📝 Inscripción</div>
-                <div style="font-size:14px; font-weight:bold; color:#e67e22;">${pagadosInsc}/${total} ($${totalInsc.toFixed(2)})</div>
-            </div>
-            <div>
-                <div style="font-size:10px; color:#666;">📚 Compendio</div>
-                <div style="font-size:14px; font-weight:bold; color:#27ae60;">${pagadosComp}/${total} ($${totalComp.toFixed(2)})</div>
-            </div>
-            <div>
-                <div style="font-size:10px; color:#666;">✝️ Crucifijo</div>
-                <div style="font-size:14px; font-weight:bold; color:#8e44ad;">${pagadosCruc}/${total} ($${totalCruc.toFixed(2)})</div>
-            </div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; text-align:center; font-size:12px; color:#666;">
-            <div>💰 Ingresos actividades: $${ingresosManuales.toFixed(2)}</div>
-            <div>💸 Gastos: $${gastosManuales.toFixed(2)}</div>
-        </div>
-        <div style="text-align:center; margin-top:6px; font-size:13px; font-weight:bold; color:#2c3e50;">
-            📊 Disponible: $${disponible.toFixed(2)}
-        </div>
-    `;
-
-    // Insertar el resumen
-    let existingResumen = document.getElementById('resumenCobrosFinanzas');
-    if (existingResumen) {
-        existingResumen.innerHTML = resumenHTML;
-    } else {
-        const resumenDiv = document.createElement('div');
-        resumenDiv.id = 'resumenCobrosFinanzas';
-        resumenDiv.innerHTML = resumenHTML;
-        const resumenItems = document.querySelector('.finanzas-resumen');
-        resumenItems.parentElement.insertBefore(resumenDiv, resumenItems.nextSibling);
-    }
-
-    // Resaltar filtro activo
-    document.querySelectorAll('.finanzas-resumen .item').forEach(item => {
-        const filtro = item.dataset.filtro;
-        item.classList.toggle('active', filtro === filtroFinanzasActual);
-    });
-}
-
-            // Insertar el resumen
-            const summaryCard = document.querySelector('.finanzas-resumen').parentElement;
-            let existingResumen = document.getElementById('resumenCobrosFinanzas');
-            if (existingResumen) {
-                existingResumen.innerHTML = resumenHTML;
-            } else {
-                const resumenDiv = document.createElement('div');
-                resumenDiv.id = 'resumenCobrosFinanzas';
-                resumenDiv.innerHTML = resumenHTML;
-                const resumenItems = document.querySelector('.finanzas-resumen');
-                resumenItems.parentElement.insertBefore(resumenDiv, resumenItems.nextSibling);
+            // 5. Actualizar los botones de filtro con la información de cobros
+            const inscBtn = document.querySelector('.filtro-btn[data-filtro="inscripcion"]');
+            const compBtn = document.querySelector('.filtro-btn[data-filtro="compendio"]');
+            const crucBtn = document.querySelector('.filtro-btn[data-filtro="crucifijo"]');
+            
+            if (inscBtn) {
+                inscBtn.innerHTML = `📝 Inscripción ${pagadosInsc}/${total} $${totalInsc.toFixed(0)}`;
+            }
+            if (compBtn) {
+                compBtn.innerHTML = `📚 Compendio ${pagadosComp}/${total} $${totalComp.toFixed(0)}`;
+            }
+            if (crucBtn) {
+                crucBtn.innerHTML = `✝️ Crucifijo ${pagadosCruc}/${total} $${totalCruc.toFixed(0)}`;
             }
 
-            // Resaltar filtro activo
+            // 6. Resaltar filtro activo
             document.querySelectorAll('.finanzas-resumen .item').forEach(item => {
                 const filtro = item.dataset.filtro;
                 item.classList.toggle('active', filtro === filtroFinanzasActual);
+            });
+            
+            document.querySelectorAll('.filtro-btn').forEach(btn => {
+                const filtro = btn.dataset.filtro;
+                btn.classList.toggle('active', filtro === filtroFinanzasActual);
             });
         }
 
         function filtrarFinanzas(tipo) {
             filtroFinanzasActual = tipo;
+            
             document.querySelectorAll('.filtro-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.filtro === tipo);
             });
+            
             renderizarFinanzas();
             renderizarResumenFinanzas();
         }
@@ -537,23 +502,22 @@
             const finanzas = data.finanzas || [];
             const totalIngresosManual = finanzas.filter(m => m.tipo === 'ingreso').reduce((sum, m) => sum + m.monto, 0);
             const totalGastosManual = finanzas.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + m.monto, 0);
-            // Para el disponible solo sumamos Compendio + Crucifijo + Ingresos manuales - Gastos
             const disponible = totalComp + totalCruc + totalIngresosManual - totalGastosManual;
             
             document.getElementById('resumenPeriodo').innerHTML = `
-                <div class="linea" style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #eee; font-size:13px;"><span>👥 Participantes activos</span><span>${total}</span></div>
-                <div class="linea" style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #eee; font-size:13px;"><span>📝 Inscripción (${pagadosInsc}/${total})</span><span>$${totalInsc.toFixed(2)}</span></div>
-                <div class="linea" style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #eee; font-size:13px;"><span>📚 Compendio (${pagadosComp}/${total})</span><span>$${totalComp.toFixed(2)}</span></div>
-                <div class="linea" style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #eee; font-size:13px;"><span>✝️ Crucifijo (${pagadosCruc}/${total})</span><span>$${totalCruc.toFixed(2)}</span></div>
-                <div class="linea" style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #eee; font-size:13px;"><span>💰 Total recaudado</span><span>$${totalGeneral.toFixed(2)}</span></div>
-                <div class="linea" style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #eee; font-size:13px;"><span>📊 Ingresos adicionales</span><span>$${totalIngresosManual.toFixed(2)}</span></div>
-                <div class="linea" style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #eee; font-size:13px;"><span>💸 Gastos</span><span>$${totalGastosManual.toFixed(2)}</span></div>
-                <div class="linea" style="display:flex; justify-content:space-between; padding:4px 0; font-weight:bold; font-size:14px; border-top:2px solid #2c3e50; margin-top:6px; padding-top:6px; color:#27ae60;"><span>📈 Disponible</span><span>$${disponible.toFixed(2)}</span></div>
+                <div class="linea"><span>👥 Participantes activos</span><span>${total}</span></div>
+                <div class="linea"><span>📝 Inscripción (${pagadosInsc}/${total})</span><span>$${totalInsc.toFixed(2)}</span></div>
+                <div class="linea"><span>📚 Compendio (${pagadosComp}/${total})</span><span>$${totalComp.toFixed(2)}</span></div>
+                <div class="linea"><span>✝️ Crucifijo (${pagadosCruc}/${total})</span><span>$${totalCruc.toFixed(2)}</span></div>
+                <div class="linea"><span>💰 Total recaudado</span><span>$${totalGeneral.toFixed(2)}</span></div>
+                <div class="linea"><span>📊 Ingresos adicionales</span><span>$${totalIngresosManual.toFixed(2)}</span></div>
+                <div class="linea"><span>💸 Gastos</span><span>$${totalGastosManual.toFixed(2)}</span></div>
+                <div class="linea" style="font-weight:bold; font-size:14px; border-top:2px solid #2c3e50; margin-top:6px; padding-top:6px; border-bottom:none; color:#27ae60;"><span>📈 Disponible</span><span>$${disponible.toFixed(2)}</span></div>
             `;
             const historial = data.historial || [];
             const list = document.getElementById('historialPeriodos');
             if (historial.length === 0) { list.innerHTML = '<div class="empty-state">No hay períodos cerrados</div>'; return; }
-            list.innerHTML = historial.map(h => `<div class="periodo-item" style="padding:8px 0; border-bottom:1px solid #eee; font-size:13px;"><div><strong>${h.nombre}</strong><span style="float:right; font-weight:bold; color:#27ae60;">$${h.total.toFixed(2)}</span></div><div style="color:#666; font-size:11px;">Cerrado: ${formatearFecha(h.fechaCierre)}</div></div>`).join('');
+            list.innerHTML = historial.map(h => `<div class="periodo-item"><div><strong>${h.nombre}</strong><span class="total">$${h.total.toFixed(2)}</span></div><div style="color:#666; font-size:11px;">Cerrado: ${formatearFecha(h.fechaCierre)}</div></div>`).join('');
         }
 
         // ============================================
@@ -717,8 +681,6 @@
             const finanzas = data.finanzas || [];
             const totalIngresosManual = finanzas.filter(m => m.tipo === 'ingreso').reduce((sum, m) => sum + m.monto, 0);
             const totalGastosManual = finanzas.filter(m => m.tipo === 'gasto').reduce((sum, m) => sum + m.monto, 0);
-            // El total final incluye TODO (inscripciones + compendios + crucifijos + ingresos manuales - gastos)
-            // Pero para el historial guardamos el total general (todo)
             const totalFinal = totalInsc + totalComp + totalCruc + totalIngresosManual - totalGastosManual;
             const periodoNombre = `Periodo ${new Date().toLocaleDateString()}`;
             const fechaCierre = obtenerFechaActual();
