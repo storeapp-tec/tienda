@@ -87,9 +87,130 @@
     .btn-icon { width: 36px; height: 36px; padding: 0; border-radius: 10px; font-size: 1rem; flex-shrink: 0; }
     .btn-sm { padding: 5px 10px; font-size: 0.7rem; border-radius: 6px; }
     
-    .quick-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-    .btn-quick { padding: 6px 10px; font-size: 0.68rem; border-radius: 8px; background: #E8F5E9; color: var(--accent); border: 1px solid var(--accent); font-weight: 500; cursor: pointer; white-space: nowrap; }
-    .btn-quick:active { background: var(--accent); color: white; }
+    /* ===== BOTONES RÁPIDOS REDISEÑADOS ===== */
+    .rapidos-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 6px;
+      padding: 0;
+    }
+    
+    .linea-rapidos {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #F8FAFB;
+      border-radius: 8px;
+      padding: 4px 8px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      border: 1px solid #E8ECEF;
+    }
+    
+    .tienda-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      flex-shrink: 0;
+      letter-spacing: 0.5px;
+    }
+    
+    .tienda-tag.tec {
+      color: #003D4D;
+    }
+    
+    .tienda-tag.milenio {
+      color: #1B998B;
+    }
+    
+    .btn-rapido {
+      padding: 4px 10px;
+      font-size: 0.7rem;
+      border-radius: 14px;
+      border: 1px solid #D0D5DD;
+      background: white;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      min-width: 42px;
+      font-weight: 500;
+      flex-shrink: 0;
+      line-height: 1.3;
+      white-space: nowrap;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    
+    .btn-rapido:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(27, 153, 139, 0.2);
+    }
+    
+    .btn-rapido:active {
+      transform: scale(0.95);
+      box-shadow: none;
+    }
+    
+    .btn-rapido.bolsa {
+      background: #E3F2FD;
+      border-color: #90CAF9;
+      color: #0D47A1;
+    }
+    
+    .btn-rapido.bolsa:hover {
+      background: #0D47A1;
+      border-color: #0D47A1;
+      color: white;
+    }
+    
+    .btn-rapido.gorra {
+      background: #F3E5F5;
+      border-color: #CE93D8;
+      color: #4A148C;
+    }
+    
+    .btn-rapido.gorra:hover {
+      background: #4A148C;
+      border-color: #4A148C;
+      color: white;
+    }
+    
+    .btn-rapido.caja {
+      background: #FFF3E0;
+      border-color: #FFB74D;
+      color: #E65100;
+    }
+    
+    .btn-rapido.caja:hover {
+      background: #E65100;
+      border-color: #E65100;
+      color: white;
+    }
+    
+    .btn-rapido.milenio {
+      background: #E0F7FA;
+      border-color: #80DEEA;
+      color: #00695C;
+    }
+    
+    .btn-rapido.milenio:hover {
+      background: #00695C;
+      border-color: #00695C;
+      color: white;
+    }
+    
+    .separador {
+      color: #CBD5E1;
+      font-size: 0.9rem;
+      padding: 0 2px;
+      flex-shrink: 0;
+      font-weight: 300;
+    }
+    /* ===== FIN BOTONES REDISEÑADOS ===== */
     
     .product-item {
       display: flex; align-items: center; justify-content: space-between;
@@ -254,14 +375,31 @@
       <div class="card">
         <div class="input-row"><input type="text" id="input-codigo-vender" placeholder="Escanea o código..."><button class="btn btn-primary btn-icon" onclick="abrirEscaner('vender')">📷</button></div>
         <button class="btn btn-accent" style="width:100%;" onclick="agregarAlCarrito()">Agregar</button>
-        <div class="quick-btns">
-          <button class="btn-quick" onclick="agregarRapido('2010870300016')">🛍️ (S)</button>
-          <button class="btn-quick" onclick="agregarRapido('2010870400013')">🛍️ (M)</button>
-          <button class="btn-quick" onclick="agregarRapido('2010870600017')">🛍️ (L)</button>
-          <button class="btn-quick" onclick="agregarRapido('2011081900019')">📦 Caja</button>
-          <button class="btn-quick" onclick="agregarRapido('2010523100017')">🧢 NE Negra</button>
-          <button class="btn-quick" onclick="agregarRapido('2010541800012')">🧢 NE Gris</button>
+        
+        <!-- ===== BOTONES RÁPIDOS CON IDs CORREGIDOS ===== -->
+        <div class="rapidos-container">
+          <!-- Línea TEC -->
+          <div class="linea-rapidos">
+            <span class="tienda-tag tec">🏢 TEC</span>
+            <button class="btn-rapido bolsa" onclick="agregarRapido('2010870300016')" title="Bolsa Chica TEC">🛍️ CH</button>
+            <button class="btn-rapido bolsa" onclick="agregarRapido('2010870400013')" title="Bolsa Mediana TEC">🛍️ M</button>
+            <button class="btn-rapido bolsa" onclick="agregarRapido('2010870600017')" title="Bolsa Grande TEC">🛍️ G</button>
+            <span class="separador">|</span>
+            <button class="btn-rapido gorra" onclick="agregarRapido('2010523100017')" title="Gorra NE Negra TEC">🧢 Negra</button>
+            <button class="btn-rapido gorra" onclick="agregarRapido('2010541800012')" title="Gorra NE Gris TEC">🧢 Gris</button>
+            <span class="separador">|</span>
+            <button class="btn-rapido caja" onclick="agregarRapido('2011081900019')" title="Caja TEC">📦</button>
+          </div>
+          
+          <!-- Línea MILENIO con IDs CORREGIDOS -->
+          <div class="linea-rapidos">
+            <span class="tienda-tag milenio">🏛️ MIL</span>
+            <button class="btn-rapido milenio" onclick="agregarRapido('2011212100004')" title="Bolsa Chica MILENIO">🛍️ CH</button>
+            <button class="btn-rapido milenio" onclick="agregarRapido('2011212200001')" title="Bolsa Mediana MILENIO">🛍️ M</button>
+            <button class="btn-rapido milenio" onclick="agregarRapido('2011194400017')" title="Bolsa Grande MILENIO">🛍️ G</button>
+          </div>
         </div>
+        <!-- ===== FIN BOTONES RÁPIDOS ===== -->
       </div>
       
       <div class="totals-bar">
@@ -479,7 +617,7 @@ function cerrarEscaner() {
 
 function agregarRapido(id) {
   let p = productos.find(x=>x.id===id);
-  if(!p) return mostrarToast('Producto no encontrado');
+  if(!p) return mostrarToast('❌ Producto no encontrado en inventario');
   if (modoDevolucion) {
     let existe = carrito.find(x=>x.id===id && x.devolucion);
     if(existe) existe.cantidad++; else carrito.push({id,descripcion:p.descripcion,cantidad:1,precio:Number(p.precio),categoria:p.categoria||'TEC',devolucion:true});
