@@ -2,15 +2,15 @@
   "name": "Store",
   "short_name": "Store",
   "description": "Sistema de inventario y punto de venta",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#F5F7FA",
   "theme_color": "#003D4D",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
