@@ -452,7 +452,7 @@
     .tbl-differences td { padding: 6px 4px; border-bottom: 1px solid var(--border); vertical-align: middle; }
     .input-edit-fisico { width: 48px; padding: 4px; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--primary); font-size: 0.75rem; }
   </style>
-  <!-- CDN corregido: jsdelivr (más confiable que unpkg) -->
+  <!-- CDN actualizado (jsdelivr es más confiable para html5-qrcode) -->
   <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
@@ -614,6 +614,7 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- MODAL DE SELECCIÓN DE PAGO -->
 <div class="modal-overlay" id="modal-pago">
   <div class="modal-box">
     <div class="modal-icon">💳</div>
@@ -632,6 +633,7 @@
   </div>
 </div>
 
+<!-- MODAL DE CONFIRMACIÓN DE VENTA / DEVOLUCIÓN -->
 <div class="modal-overlay" id="modal-confirm">
   <div class="modal-box">
     <div class="modal-icon">✅</div>
@@ -644,6 +646,7 @@
   </div>
 </div>
 
+<!-- MODAL 1: CAPTURA DE CONTEO FÍSICO POR ARTÍCULO -->
 <div class="modal-overlay" id="modal-captura-conteo">
   <div class="modal-box">
     <div class="modal-icon">📦</div>
@@ -676,6 +679,7 @@
   </div>
 </div>
 
+<!-- MODAL 2: VALIDACIÓN AL TERMINAR CONTEO (PARCIAL VS TOTAL) -->
 <div class="modal-overlay" id="modal-terminar-conteo">
   <div class="modal-box">
     <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:2px;">
@@ -699,6 +703,7 @@
   </div>
 </div>
 
+<!-- MODAL 3: CONCILIACIÓN Y REVISIÓN DE DIFERENCIAS -->
 <div class="modal-overlay" id="modal-confirmar-conciliacion">
   <div class="modal-box" style="max-width:440px; width:92%; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; padding:18px;">
     <div style="flex-shrink:0; text-align:left;">
@@ -726,6 +731,7 @@
   </div>
 </div>
 
+<!-- MODAL CONFIRMAR ALTA DE PRODUCTO NO EXISTENTE -->
 <div class="modal-overlay" id="modal-preguntar-alta">
   <div class="modal-box">
     <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:4px;">
@@ -742,6 +748,7 @@
   </div>
 </div>
 
+<!-- MODAL COMPLETO: DAR DE ALTA NUEVO PRODUCTO -->
 <div class="modal-overlay" id="modal-alta-producto">
   <div class="modal-box" style="max-width:380px; text-align:left;">
     <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
@@ -790,6 +797,7 @@
   </div>
 </div>
 
+<!-- MODAL ARTÍCULOS RÁPIDOS DE VENTA -->
 <div class="modal-overlay" id="modal-articulos-rapidos">
   <div class="modal-box" style="max-width:390px; text-align:left; max-height:85vh; padding:14px;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
@@ -826,6 +834,7 @@
   </div>
 </div>
 
+<!-- MODAL CONFIRMAR DESCARTAR BORRADOR DE CONTEO -->
 <div class="modal-overlay" id="modal-descartar-conteo">
   <div class="modal-box">
     <div class="modal-icon">🗑️</div>
@@ -919,7 +928,7 @@ function mostrarToast(m) {
   let t = document.getElementById('toast'); 
   t.textContent = m; 
   t.style.display = 'block'; 
-  setTimeout(() => t.style.display = 'none', 2500); 
+  setTimeout(() => t.style.display = 'none', 3000); 
 }
 
 function cambiarVista(v) {
@@ -1537,22 +1546,102 @@ function ejecutarAltaProducto() {
   });
 }
 
-/* ====== ESCÁNER MEJORADO (FIX PRINCIPAL) ====== */
+/* ==========================================================================
+   SISTEMA DE ESCÁNER ROBUSTO (CORRECCIÓN DEL ERROR NotReadableError)
+   ========================================================================== */
+
+// 👇 Función auxiliar que apaga TODOS los tracks de video vivos
+function forzarLiberacionCamara() {
+  try {
+    document.querySelectorAll('video').forEach(video => {
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+      }
+      try { video.pause(); } catch(e) {}
+      try { video.remove(); } catch(e) {}
+    });
+    const viewport = document.getElementById('scanner-viewport');
+    if (viewport) viewport.innerHTML = '';
+  } catch (e) {
+    console.warn('Error liberando cámara:', e);
+  }
+}
+
+// 👇 Cerrar escáner: SIEMPRE libera la cámara, con o sin scanner activo
+function cerrarEscaner() {
+  const modal = document.getElementById('scanner-modal');
+  
+  if (scanner) {
+    scanner.stop()
+      .then(() => {
+        try { scanner.clear(); } catch(e) {}
+        scanner = null;
+        forzarLiberacionCamara();
+        setTimeout(() => { modal.style.display = 'none'; }, 250);
+      })
+      .catch(() => {
+        scanner = null;
+        forzarLiberacionCamara();
+        setTimeout(() => { modal.style.display = 'none'; }, 250);
+      });
+  } else {
+    forzarLiberacionCamara();
+    modal.style.display = 'none';
+  }
+}
+
+// 👇 Abrir escáner: LIMPIAR ANTES, ESPERAR, PEDIR PERMISO, ABRIR CON REINTENTOS
 async function abrirEscaner(ctx) {
   if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-    mostrarToast('⚠️ La cámara requiere HTTPS. Usa GitHub Pages o Ngrok.');
+    mostrarToast('⚠️ La cámara requiere HTTPS. Usa GitHub Pages.');
     return;
   }
+
   if (typeof Html5Qrcode === 'undefined') {
     mostrarToast('⚠️ Librería de escáner no cargada. Revisa tu conexión.');
     return;
   }
-  try {
-    await navigator.mediaDevices.getUserMedia({ video: true });
-  } catch (e) {
-    mostrarToast('⚠️ Debes permitir el acceso a la cámara.');
-    return;
+
+  // 1. Limpiar cualquier cámara anterior ANTES de pedirla de nuevo
+  forzarLiberacionCamara();
+  await new Promise(r => setTimeout(r, 400)); 
+
+  // 2. Verificar permiso de cámara con reintentos (soluciona el NotReadableError)
+  let permisoOk = false;
+  for (let intento = 0; intento < 3; intento++) {
+    try {
+      const streamTemp = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } }
+      });
+      streamTemp.getTracks().forEach(t => t.stop());
+      permisoOk = true;
+      break;
+    } catch (err) {
+      console.warn(`Intento ${intento + 1} de permiso falló:`, err.name);
+      
+      if (err.name === 'NotAllowedError') {
+        mostrarToast('⚠️ Permiso denegado. Ve a Ajustes > Chrome > Permisos > Cámara.');
+        return;
+      }
+      
+      if (err.name === 'NotReadableError' && intento < 2) {
+        forzarLiberacionCamara();
+        await new Promise(r => setTimeout(r, 1000));
+        continue;
+      }
+      
+      if (intento === 2) {
+        mostrarToast('⚠️ Cámara ocupada por otra app. Ciérrala y reintenta.');
+        return;
+      }
+    }
   }
+
+  if (!permisoOk) return;
+
+  // 3. Esperar un poco antes de abrir el scanner
+  await new Promise(r => setTimeout(r, 300));
 
   const modal = document.getElementById('scanner-modal');
   const viewport = document.getElementById('scanner-viewport');
@@ -1561,27 +1650,40 @@ async function abrirEscaner(ctx) {
 
   try {
     scanner = new Html5Qrcode("scanner-viewport", { verbose: false });
+    
     const config = {
       fps: 10,
-      qrbox: function(w, h) { return { width: Math.min(280, w * 0.9), height: Math.min(180, h * 0.9) }; },
+      qrbox: function(w, h) {
+        return {
+          width: Math.min(280, w * 0.9),
+          height: Math.min(180, h * 0.9)
+        };
+      },
       aspectRatio: 1.0,
       disableFlip: false,
       experimentalFeatures: { useBarCodeDetectorIfSupported: true }
     };
+
     await scanner.start(
       { facingMode: "environment" },
       config,
       (txt) => {
         if (navigator.vibrate) navigator.vibrate(80);
         cerrarEscaner();
+        
         if (ctx === 'productos') {
           document.getElementById('busqueda-producto').value = txt;
           document.getElementById('busqueda-producto').dispatchEvent(new Event('input'));
           verificarProductoOOfrecerAlta(txt, 'productos');
         } else if (ctx === 'conteo_modal') {
           let p = productos.find(x => x.id === txt);
-          if (p) abrirModalCaptura(p.id);
-          else verificarProductoOOfrecerAlta(txt, 'conteo', (prodCreado) => { abrirModalCaptura(prodCreado.id); });
+          if (p) {
+            abrirModalCaptura(p.id);
+          } else {
+            verificarProductoOOfrecerAlta(txt, 'conteo', (prodCreado) => {
+              abrirModalCaptura(prodCreado.id);
+            });
+          }
         } else if (ctx === 'alta_modal') {
           document.getElementById('alta-id').value = txt;
           document.getElementById('alta-descripcion').focus();
@@ -1594,28 +1696,18 @@ async function abrirEscaner(ctx) {
     );
   } catch (err) {
     console.error('Error al iniciar escáner:', err);
-    mostrarToast('⚠️ No se pudo iniciar la cámara: ' + (err.message || err));
+    
+    if (err.name === 'NotReadableError' || (err.message && err.message.includes('NotReadableError'))) {
+      mostrarToast('⚠️ Cámara ocupada. Cierra otras apps y reintenta.');
+    } else {
+      mostrarToast('⚠️ No se pudo iniciar: ' + (err.message || err));
+    }
     cerrarEscaner();
   }
 }
 
-function cerrarEscaner() { 
-  const modal = document.getElementById('scanner-modal');
-  if (scanner) {
-    scanner.stop().then(() => {
-      try { scanner.clear(); } catch(e) {}
-      scanner = null;
-      setTimeout(() => { modal.style.display = 'none'; }, 200);
-    }).catch(() => {
-      scanner = null;
-      modal.style.display = 'none';
-    });
-  } else {
-    modal.style.display = 'none';
-  }
-}
+/* ====== FIN SISTEMA ESCÁNER ====== */
 
-/* ====== MODAL RÁPIDOS ====== */
 function abrirModalRapidos() {
   actualizarBadgesModalRapidos();
   document.getElementById('modal-articulos-rapidos').style.display = 'flex';
